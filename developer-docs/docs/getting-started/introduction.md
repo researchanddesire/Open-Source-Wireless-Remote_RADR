@@ -29,15 +29,13 @@ RADR runs on an ESP32-S3 microcontroller with custom firmware written in C++ usi
 | Full Version | 1.0.24 |
 
 !!! info
-Check for firmware updates regularly to access new features and device support.
+    Check for firmware updates regularly to access new features and device support.
 
 ## Source Code
 
 The complete firmware source is available on GitHub:
 
-<Card title="RADR Firmware" icon="code" href="https://github.com/researchanddesire/radr-wireless-remote/tree/main/Software">
-Browse the source code and documentation.
-</Card>
+- **[RADR Firmware](https://github.com/researchanddesire/radr-wireless-remote/tree/main/Software)** — Browse the source code and documentation.
 
 ## Architecture Overview
 
@@ -74,9 +72,7 @@ Browse the source code and documentation.
 
 ### Getting Started
 
-
 ### Step 1: Clone the repository
-
 
 ```bash
 git clone https://github.com/researchanddesire/radr-wireless-remote.git
@@ -85,11 +81,9 @@ cd radr-wireless-remote/Software
 
 ### Step 2: Open in VS Code
 
-
 Open the `Software` folder in VS Code. PlatformIO will automatically detect the project configuration.
 
 ### Step 3: Build the firmware
-
 
 Click the PlatformIO Build button or run:
 ```bash
@@ -97,7 +91,6 @@ pio run
 ```
 
 ### Step 4: Flash to device
-
 
 Connect RADR via USB-C and click Upload, or run:
 ```bash
@@ -143,16 +136,9 @@ The dynamic registry (`registry.json`) can be updated via firmware updates to ad
 
 ## Technical Reference
 
-<CardGroup cols={2}>
-<Card title="Web Flasher" icon="bolt" href="/radr/tools/web-flasher">
-Flash firmware using the web-based tool.
-</Card>
+- **[Web Flasher](/radr/tools/web-flasher)** — Flash firmware using the web-based tool.
 
-<Card title="BLE Communication" icon="bluetooth" href="/radr/Software/communication/ble">
-Bluetooth protocol details and device communication.
-</Card>
-</CardGroup>
-
+- **[BLE Communication](/radr/communication/ble)** — Bluetooth protocol details and device communication.
 ## Contributing
 
 We welcome contributions to the RADR firmware. Before contributing:

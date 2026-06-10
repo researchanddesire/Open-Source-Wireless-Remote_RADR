@@ -59,14 +59,14 @@ flowchart TD
     UpdateCheck -->|No| UpdateWifi[update.wifi]
     UpdateWifi -->|"WiFi connects"| Update
     UpdateCheck -->|Yes| Update[update]
-    
+
     Update -->|hasFilesystemUpdate| UpdateFS[update.filesystem]
     Update -->|hasSoftwareUpdate| UpdateSW[update.software]
     Update -->|"No updates"| UpdateDone[update.done]
-    
+
     UpdateFS -->|"Has software update"| UpdateSW
     UpdateFS -->|"No software update"| Restart[restart]
-    
+
     UpdateSW --> Restart
     UpdateDone --> Restart
 ```
@@ -104,7 +104,7 @@ The firmware update replaces the ESP32 application binary. This includes:
 void updateSoftwareTask(void *pvParameters) {
     // Uses ESP32 HTTPUpdate library
     httpUpdate.setRebootOnUpdate(true);  // Auto-reboot on success
-    
+
     String url = String(UPDATE_SERVER_URL) + "/master/firmware.bin";
     httpUpdate.update(client, url);
 }
@@ -126,18 +126,18 @@ The filesystem update replaces the LittleFS partition, which contains:
 ```cpp
 void updateFilesystemTask(void *pvParameters) {
     LittleFS.end();  // Unmount before update
-    
+
     httpUpdate.setRebootOnUpdate(false);  // Don't reboot yet
-    
+
     String url = String(UPDATE_SERVER_URL) + "/master/littlefs.bin";
     httpUpdate.updateSpiffs(client, url);
-    
+
     LittleFS.begin();  // Remount after update
 }
 ```
 
 !!! info
-The filesystem update does not trigger an automatic reboot. This allows both filesystem and firmware to be updated in sequence before restarting.
+    The filesystem update does not trigger an automatic reboot. This allows both filesystem and firmware to be updated in sequence before restarting.
 
 ### Registry Update Chain
 
@@ -179,7 +179,7 @@ These flags are controlled by:
 | `isFilesystemUpdateAvailable` | `FORCE_UPDATE` compile flag, or server indicates update |
 
 !!! warning
-The current implementation has a TODO for automatic update checking. Currently, updates are triggered manually and availability must be set via compile flags or external mechanisms.
+    The current implementation has a TODO for automatic update checking. Currently, updates are triggered manually and availability must be set via compile flags or external mechanisms.
 
 ## Key Source Files
 
@@ -217,16 +217,10 @@ pio run --target uploadfs
 This uploads the contents of the `data/` directory to the LittleFS partition.
 
 !!! warning
-"Upload Filesystem" erases the existing LittleFS partition before writing. Any runtime modifications will be lost.
+    "Upload Filesystem" erases the existing LittleFS partition before writing. Any runtime modifications will be lost.
 
 ## Related Documentation
 
-<CardGroup cols={2}>
-<Card title="Device Registry" icon="database" href="/radr/Software/device-registry/introduction">
-How RADR discovers and creates device instances from BLE service UUIDs.
-</Card>
+- **[Device Registry](/radr/device-registry/introduction)** — How RADR discovers and creates device instances from BLE service UUIDs.
 
-<Card title="Web Flasher" icon="bolt" href="/radr/tools/web-flasher">
-Manual firmware flashing via browser.
-</Card>
-</CardGroup>
+- **[Web Flasher](/radr/tools/web-flasher)** — Manual firmware flashing via browser.

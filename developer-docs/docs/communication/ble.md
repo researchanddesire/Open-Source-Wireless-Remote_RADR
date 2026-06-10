@@ -159,7 +159,7 @@ RADR uses open BLE connections without pairing or bonding:
 - Single connection at a time
 
 !!! warning
-BLE communications are not encrypted. Use RADR in private settings where radio interception is not a concern.
+    BLE communications are not encrypted. Use RADR in private settings where radio interception is not a concern.
 
 ## Debugging
 
@@ -171,12 +171,6 @@ For BLE debugging during development:
 
 ## Further Reading
 
-<CardGroup cols={2}>
-<Card title="NimBLE Documentation" icon="book" href="https://mynewt.apache.org/latest/network/index.html">
-NimBLE stack documentation.
-</Card>
+- **[NimBLE Documentation](https://mynewt.apache.org/latest/network/index.html)** — NimBLE stack documentation.
 
-<Card title="Buttplug.io Protocol" icon="book" href="https://buttplug-spec.docs.buttplug.io/">
-Buttplug device protocol specification.
-</Card>
-</CardGroup>
+- **[Buttplug.io Protocol](https://buttplug-spec.docs.buttplug.io/)** — Buttplug device protocol specification.

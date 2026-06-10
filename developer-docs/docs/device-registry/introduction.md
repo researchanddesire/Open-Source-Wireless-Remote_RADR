@@ -166,14 +166,11 @@ Spec files follow the Buttplug.io v4 format:
 
 For devices compatible with the Buttplug.io protocol:
 
-
 ### Step 1: Obtain or create the spec file
-
 
 Get the Buttplug.io v4 protocol specification for the device. These are available in the [Buttplug device config repository](https://github.com/buttplugio/buttplug).
 
 ### Step 2: Add spec file to protocols
-
 
 Place the JSON spec file in `data/protocols/`:
 ```
@@ -181,7 +178,6 @@ data/protocols/your-device.json
 ```
 
 ### Step 3: Update registry.json
-
 
 Add the service UUID mapping to `data/registry.json`:
 ```json
@@ -192,26 +188,21 @@ Add the service UUID mapping to `data/registry.json`:
 
 ### Step 4: Upload filesystem
 
-
 Use PlatformIO to upload the filesystem to the device.
 
 ### Option B: Hardcoded (Custom Protocol)
 
 For devices requiring custom protocol handling:
 
-
 ### Step 5: Create device class
-
 
 Create a new device class in `src/devices/` that extends the `Device` base class.
 
 ### Step 6: Implement required methods
 
-
 Implement `getServiceUUID()`, `getName()`, and any device-specific control logic.
 
 ### Step 7: Register in initRegistry
-
 
 Add registration code in `initRegistry()`:
 ```cpp
@@ -223,7 +214,6 @@ registry.emplace(
 ```
 
 ### Step 8: Rebuild firmware
-
 
 Compile and flash the updated firmware.
 
@@ -238,12 +228,12 @@ When developing locally, use PlatformIO's "Upload Filesystem" feature to flash t
 3. The device will use the updated registry on next boot
 
 !!! warning
-"Upload Filesystem" erases the existing LittleFS partition before writing. Any runtime modifications will be lost.
+    "Upload Filesystem" erases the existing LittleFS partition before writing. Any runtime modifications will be lost.
 
 ### Updating the Registry (Production)
 
 !!! info
-OTA registry updates are a pending feature. Currently, registry updates require a firmware flash.
+    OTA registry updates are a pending feature. Currently, registry updates require a firmware flash.
 
 The planned workflow for production devices:
 
@@ -265,12 +255,6 @@ The planned workflow for production devices:
 
 ## Further Reading
 
-<CardGroup cols={2}>
-<Card title="BLE Communication" icon="bluetooth" href="/radr/Software/communication/ble">
-Bluetooth protocol details and connection handling.
-</Card>
+- **[BLE Communication](/radr/communication/ble)** — Bluetooth protocol details and connection handling.
 
-<Card title="Buttplug.io Protocol" icon="book" href="https://buttplug-spec.docs.buttplug.io/">
-Official Buttplug device protocol specification.
-</Card>
-</CardGroup>
+- **[Buttplug.io Protocol](https://buttplug-spec.docs.buttplug.io/)** — Official Buttplug device protocol specification.
