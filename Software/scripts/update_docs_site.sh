@@ -2,8 +2,8 @@
 
 set -e
 
-DOCS_V_PATH="$(dirname "$0")/../docs/v"
-ALL_VERSIONS_JSON_PATH="$(dirname "$0")/../docs/all-versions.json"
+DOCS_V_PATH="$(dirname "$0")/../../ota/v"
+ALL_VERSIONS_JSON_PATH="$(dirname "$0")/../../ota/all-versions.json"
 
 # Build parallel arrays: old_versions and old_datetimes
 old_versions=()

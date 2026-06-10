@@ -1,0 +1,22 @@
+site_name: RADR Developer Docs
+site_url: https://dev.researchanddesire.com/radr/
+repo_url: https://github.com/researchanddesire/radr-wireless-remote
+repo_name: radr-wireless-remote
+
+theme:
+  name: material
+
+nav:
+  - Overview: index.md
+  - Getting Started:
+      - Introduction: getting-started/introduction.md
+  - Communication:
+      - BLE: communication/ble.md
+  - Device Registry:
+      - Introduction: device-registry/introduction.md
+  - OTA Updates:
+      - Introduction: ota-updates/introduction.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences
