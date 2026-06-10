@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RADR Firmware Versions</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen">
+<div class="max-w-xl mx-auto mt-12 bg-white rounded-xl shadow-md p-8">
+    <h1 class="text-3xl font-bold mb-2">RADR Firmware Versions</h1>
+    <div class="text-gray-500 text-lg mb-8">OTA firmware for the Research and Desire wireless remote</div>
+
+    <section class="mb-8">
+        <h2 class="text-xl font-semibold text-blue-800 mb-2">Latest</h2>
+        <a href="./v/latest/version.json" class="text-blue-600 hover:underline mr-6">version.json</a>
+        <a href="./v/latest/firmware.bin" class="text-blue-600 hover:underline">firmware.bin</a>
+    </section>
+
+    <details class="mt-6">
+        <summary class="cursor-pointer text-lg font-medium text-gray-700">All Versions</summary>
+        <ul id="all-versions-list" class="list-disc pl-6 mt-2"></ul>
+    </details>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const list = document.getElementById('all-versions-list');
+    fetch('./all-versions.json')
+        .then(response => response.ok ? response.json() : Promise.reject())
+        .then(data => {
+            list.innerHTML = '';
+            data.forEach(ver => {
+                ['version.json', 'firmware.bin'].forEach(suffix => {
+                    const li = document.createElement('li');
+                    li.className = 'mb-1';
+                    const a = document.createElement('a');
+                    a.href = suffix === 'version.json' ? ver.url : ver.firmware;
+                    a.className = 'text-blue-600 hover:underline';
+                    a.textContent = `v/${ver.version}/${suffix}`;
+                    li.appendChild(a);
+                    list.appendChild(li);
+                });
+            });
+        })
+        .catch(() => {
+            list.innerHTML = '<li class="text-red-600">Failed to load versions.</li>';
+        });
+});
+</script>
+</body>
+</html>
