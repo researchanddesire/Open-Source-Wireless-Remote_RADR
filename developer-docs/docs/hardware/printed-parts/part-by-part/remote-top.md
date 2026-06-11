@@ -1,0 +1,53 @@
+# Remote - Top Housing
+
+import { STLViewer } from '/snippets/ossm/stl-render.jsx';
+
+<STLViewer url="https://raw.githubusercontent.com/researchanddesire/radr-wireless-remote/main/Hardware/Print%20Files/Remote%20-%20Top%20V1.01.stl" />
+
+## Function
+
+The Top Housing is the main upper shell of the RADR wireless remote. This component:
+
+- Houses the TFT display with a precision cutout for the screen
+- Provides openings for the three tactile buttons
+- Features mounting points for the rotary encoders (knobs)
+- Contains windows for LED status indicators (optional transparent sections)
+- Defines the primary ergonomic grip surface
+
+## Print Settings
+
+| Setting | Value |
+|---------|-------|
+| Layer Height | 0.12mm (for smooth curves) |
+| Walls | 4 |
+| Infill Type | Gyroid |
+| Infill Percentage | 20-30% |
+| Supports | Yes - significant supports needed |
+
+!!! note
+    The display cutout and internal features require substantial support material. For Bambu printers, the included 3MF file has optimized support settings.
+
+!!! tip
+    Print with the display opening facing up for best results on the visible surfaces.
+
+## Multi-Color Printing (Optional)
+
+The top housing includes separate bodies for multi-color printing:
+
+| Area | Purpose | Recommended Material |
+|------|---------|---------------------|
+| Power indicator window | Shows charging LED | Transparent/translucent |
+| Button status windows | Shows button backlighting | Transparent/translucent |
+| Knob backlight rings | Shows encoder LED colors | Transparent/translucent |
+
+!!! info
+    Multi-color printing is purely aesthetic. The remote functions identically with single-color prints.
+
+## Download Files
+**[STEP File](https://github.com/researchanddesire/radr-wireless-remote/blob/main/Hardware/Print%20Files/Remote%20-%20Top%20V1.01.step)**
+
+Download for CAD editing
+
+**[3MF Project](https://github.com/researchanddesire/radr-wireless-remote/blob/main/Hardware/Print%20Files/Bambu%20A1%20Remote_V1.01.3mf)**
+
+Bambu Studio project with print settings
