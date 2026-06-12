@@ -43,7 +43,7 @@ The vendored schema lives at `.github/workflows/scripts/bom.schema.json` — do 
 
 ## Category codes (closed set — uppercase)
 
-`ADH` Adhesive · `ASM` Assembly · `BTP` Belt and Pulley · `CAP` Capacitor · `CBL` Cable ·
+`ADH` Adhesive · `ASM` Assembly · `BTP` Belt and Pulley · `BTY` Battery · `CAP` Capacitor · `CBL` Cable ·
 `CHA` Cable Harness Assembly · `CON` Connector · `CSM` Machined Metal · `EXT` Extruded Aluminum ·
 `FBO` Fabricated, Other · `FIL` FDM Filament · `FST` Fastener · `FUS` Fuse · `IC` Integrated Circuit ·
 `IND` Inductor · `INS` Insulation · `LNM` Linear Motion · `LUB` Lubricant · `MCM` Machined Plastic ·
