@@ -1,0 +1,59 @@
+---
+description: BOM standard for hardware/<product>/bom.csv — column contract and category codes
+globs: hardware/**/bom.csv
+alwaysApply: false
+---
+
+# BOM standard (RAD)
+
+When creating or editing any `hardware/<product>/bom.csv`, follow the canonical RAD BOM
+standard. Full reference: https://dev.researchanddesire.com/meta/bom-standard/
+(source: `researchanddesire/dev-docs` `docs/meta/bom-standard.md` + `schemas/bom.schema.json`).
+The vendored schema lives at `.github/workflows/scripts/bom.schema.json` — do not hand-edit it.
+
+## Header (exact, in this order)
+
+```
+#,Part Name,Category,Description,Qty,UOM,Manufacturer,MFG PN,Vendor,Vendor PN,Source,Notes
+```
+
+## Columns
+
+| Field name           | Header        | Type    | Required | Notes                                                        |
+| -------------------- | ------------- | ------- | -------- | ------------------------------------------------------------ |
+| `line_item`          | `#`           | integer | yes      | Sequential line number                                       |
+| `part_name`          | `Part Name`   | string  | yes      |                                                              |
+| `category`           | `Category`    | string  | yes      | One of the category codes below (closed set)                 |
+| `description`        | `Description` | string  | no       |                                                              |
+| `qty`                | `Qty`         | number  | yes      | UOM carries the unit; fractions OK for measured UOMs         |
+| `unit_of_measure`    | `UOM`         | string  | no       | Free text (`each`, `mm`, `ml`, `g`)                          |
+| `manufacturer`       | `Manufacturer`| string  | no       |                                                              |
+| `mfg_part_number`    | `MFG PN`      | string  | no       |                                                              |
+| `vendor`             | `Vendor`      | string  | no       |                                                              |
+| `vendor_part_number` | `Vendor PN`   | string  | no       |                                                              |
+| `source`             | `Source`      | string  | no       | Link to the in-repo GitHub source of the part where possible |
+| `notes`              | `Notes`       | string  | no       |                                                              |
+
+## Conventions
+
+- **No blank cells** — write an en-dash `–` (U+2013) for any empty value, never leave it blank.
+- **`qty`** is a number (integers for discrete parts; fractions fine for measured UOMs). Don't cross-check qty against UOM.
+- **`UOM`** is free text.
+- **`source`** should link to the part's in-repo source (`cad/`, `pcb/`, `cables/`) when one exists; otherwise `–`.
+
+## Category codes (closed set — uppercase)
+
+`ADH` Adhesive · `ASM` Assembly · `BTP` Belt and Pulley · `CAP` Capacitor · `CBL` Cable ·
+`CHA` Cable Harness Assembly · `CON` Connector · `CSM` Machined Metal · `EXT` Extruded Aluminum ·
+`FBO` Fabricated, Other · `FIL` FDM Filament · `FST` Fastener · `FUS` Fuse · `IC` Integrated Circuit ·
+`IND` Inductor · `INS` Insulation · `LNM` Linear Motion · `LUB` Lubricant · `MCM` Machined Plastic ·
+`MTR` Motor · `OSC` Oscillator · `PCA` Printed Circuit Board Assembly · `PCB` Printed Circuit Board ·
+`PCP` Printed Circuit Board Panel · `PKG` Packaging · `PNU` Pneumatic · `PPG` Paper Goods ·
+`PSU` Power Supply Unit · `PWT` Power Transmission · `RES` Resistor · `SKU` Stock Keeping Unit ·
+`SLA` Stereolithography Printed Parts · `SOP` Standard Operating Procedure · `SPR` Spring · `SWI` Switch
+
+Use only these codes. To add a category, change the canonical list in `dev-docs`, not here.
+
+## Editing
+
+Editing `bom.csv` is open — humans and agents may change it directly and push/PR. The only gate is `bom-lint`: if it passes, the change is good. Only `.github/workflows/scripts/bom.schema.json` is locked (vendored, read-only).

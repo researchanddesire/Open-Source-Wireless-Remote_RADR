@@ -1,0 +1,93 @@
+{
+  "$schema": "https://frictionlessdata.io/schemas/table-schema.json",
+  "name": "rad-bom",
+  "title": "RAD Bill of Materials",
+  "description": "Canonical column contract for hardware/<product>/bom.csv across all RAD product repos. Source of truth lives in researchanddesire/dev-docs; vendored read-only into each product repo and enforced by bom-lint. See docs/meta/bom-standard.md.",
+  "missingValues": ["–"],
+  "fields": [
+    {
+      "name": "line_item",
+      "title": "#",
+      "type": "integer",
+      "description": "Sequential line number.",
+      "constraints": { "required": true }
+    },
+    {
+      "name": "part_name",
+      "title": "Part Name",
+      "type": "string",
+      "description": "Human-readable name of the part.",
+      "constraints": { "required": true, "minLength": 1 }
+    },
+    {
+      "name": "category",
+      "title": "Category",
+      "type": "string",
+      "description": "Part category code. Closed vocabulary — see docs/meta/bom-standard.md.",
+      "constraints": {
+        "required": true,
+        "enum": [
+          "ADH", "ASM", "BTP", "CAP", "CBL", "CHA", "CON", "CSM", "EXT", "FBO",
+          "FIL", "FST", "FUS", "IC", "IND", "INS", "LNM", "LUB", "MCM", "MTR",
+          "OSC", "PCA", "PCB", "PCP", "PKG", "PNU", "PPG", "PSU", "PWT", "RES",
+          "SKU", "SLA", "SOP", "SPR", "SWI"
+        ]
+      }
+    },
+    {
+      "name": "description",
+      "title": "Description",
+      "type": "string",
+      "description": "Short description of the part."
+    },
+    {
+      "name": "qty",
+      "title": "Qty",
+      "type": "number",
+      "description": "Quantity in the units given by UOM. Fractions allowed for measured UOMs.",
+      "constraints": { "required": true }
+    },
+    {
+      "name": "unit_of_measure",
+      "title": "UOM",
+      "type": "string",
+      "description": "Unit of measure (free text, e.g. each, mm, ml, g)."
+    },
+    {
+      "name": "manufacturer",
+      "title": "Manufacturer",
+      "type": "string",
+      "description": "Manufacturer name."
+    },
+    {
+      "name": "mfg_part_number",
+      "title": "MFG PN",
+      "type": "string",
+      "description": "Manufacturer part number."
+    },
+    {
+      "name": "vendor",
+      "title": "Vendor",
+      "type": "string",
+      "description": "Vendor / distributor name."
+    },
+    {
+      "name": "vendor_part_number",
+      "title": "Vendor PN",
+      "type": "string",
+      "description": "Vendor / distributor part number."
+    },
+    {
+      "name": "source",
+      "title": "Source",
+      "type": "string",
+      "description": "Link to the in-repo GitHub source that defines/produces the part (CAD, PCB, cables) where one exists."
+    },
+    {
+      "name": "notes",
+      "title": "Notes",
+      "type": "string",
+      "description": "Free-form notes."
+    }
+  ]
+}
