@@ -28,9 +28,9 @@
         "required": true,
         "enum": [
           "ADH", "ASM", "BTP", "BTY", "CAP", "CBL", "CHA", "CON", "CSM", "EXT",
-          "FBO", "FIL", "FST", "FUS", "IC", "IND", "INS", "LNM", "LUB", "MCM",
-          "MTR", "OSC", "PCA", "PCB", "PCP", "PKG", "PNU", "PPG", "PSU", "PWT",
-          "RES", "SKU", "SLA", "SOP", "SPR", "SWI"
+          "FBO", "FDM", "FIL", "FST", "FUS", "IC", "IND", "INS", "LNM", "LUB",
+          "MCM", "MTR", "OSC", "PCA", "PCB", "PCP", "PKG", "PNU", "PPG", "PSU",
+          "PWT", "RES", "SKU", "SLA", "SOP", "SPR", "SWI"
         ]
       }
     },
@@ -81,7 +81,7 @@
       "name": "source",
       "title": "Source",
       "type": "string",
-      "description": "Link to the in-repo GitHub source that defines/produces the part (CAD, PCB, cables) where one exists."
+      "description": "Source link for the part. Prefer the in-repo GitHub source that defines/produces it (cad/, pcb/, cables/) when it exists; otherwise a vendor/product URL is acceptable; otherwise the empty marker."
     },
     {
       "name": "notes",

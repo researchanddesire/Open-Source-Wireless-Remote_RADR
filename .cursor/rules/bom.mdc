@@ -39,13 +39,13 @@ The vendored schema lives at `.github/workflows/scripts/bom.schema.json` — do 
 - **No blank cells** — write an en-dash `–` (U+2013) for any empty value, never leave it blank.
 - **`qty`** is a number (integers for discrete parts; fractions fine for measured UOMs). Don't cross-check qty against UOM.
 - **`UOM`** is free text.
-- **`source`** should link to the part's in-repo source (`cad/`, `pcb/`, `cables/`) when one exists; otherwise `–`.
+- **`source`** prefers the part's in-repo source (`cad/`, `pcb/`, `cables/`) when one exists; otherwise a vendor/source URL is acceptable; otherwise `–`.
 
 ## Category codes (closed set — uppercase)
 
 `ADH` Adhesive · `ASM` Assembly · `BTP` Belt and Pulley · `BTY` Battery · `CAP` Capacitor · `CBL` Cable ·
 `CHA` Cable Harness Assembly · `CON` Connector · `CSM` Machined Metal · `EXT` Extruded Aluminum ·
-`FBO` Fabricated, Other · `FIL` FDM Filament · `FST` Fastener · `FUS` Fuse · `IC` Integrated Circuit ·
+`FBO` Fabricated, Other · `FDM` Fused Deposition Modeling Printed Parts · `FIL` FDM Filament · `FST` Fastener · `FUS` Fuse · `IC` Integrated Circuit ·
 `IND` Inductor · `INS` Insulation · `LNM` Linear Motion · `LUB` Lubricant · `MCM` Machined Plastic ·
 `MTR` Motor · `OSC` Oscillator · `PCA` Printed Circuit Board Assembly · `PCB` Printed Circuit Board ·
 `PCP` Printed Circuit Board Panel · `PKG` Packaging · `PNU` Pneumatic · `PPG` Paper Goods ·
