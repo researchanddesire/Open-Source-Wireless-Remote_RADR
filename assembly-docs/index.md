@@ -4,8 +4,8 @@ Assembly documentation package for the RADR wireless remote.
 
 ## Assembly Package
 
+- [PCB Overview](pcb-overview.md)
 - [Bill of Materials](bom.md)
-- [PCB Overview](pcb-design-assets.md)
 - [Assembly Guide](assembly-guide.md)
 
 ## Product Overview

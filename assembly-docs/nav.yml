@@ -1,6 +1,6 @@
 site_name: RADR Wireless Remote Assembly Docs
 nav:
   - Overview: index.md
+  - PCB Overview: pcb-overview.md
   - Bill of Materials: bom.md
-  - PCB Overview: pcb-design-assets.md
   - Assembly Guide: assembly-guide.md
