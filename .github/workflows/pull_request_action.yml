@@ -150,13 +150,25 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Check Supabase credentials
+        id: supabase_credentials
+        run: |
+          if [ -n "$SUPABASE_ACCESS_TOKEN" ] && [ -n "$SUPABASE_PROJECT_ID" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Supabase credentials are not configured; skipping firmware upload."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Download firmware artifact
+        if: steps.supabase_credentials.outputs.present == 'true'
         uses: actions/download-artifact@v8
         with:
           name: firmware-bin
           path: ./firmware
 
       - name: URL encode branch name
+        if: steps.supabase_credentials.outputs.present == 'true'
         id: encode_branch
         run: |
           BRANCH_NAME="${{ github.head_ref || github.ref_name }}"
@@ -164,20 +176,24 @@ jobs:
           echo "encoded_branch=$URL_ENCODED_BRANCH" >> $GITHUB_OUTPUT
 
       - name: Setup Supabase CLI
+        if: steps.supabase_credentials.outputs.present == 'true'
         uses: supabase/setup-cli@v1
         with:
           version: latest
 
       - name: Install jq
+        if: steps.supabase_credentials.outputs.present == 'true'
         run: sudo apt-get update && sudo apt-get install -y jq
 
       - name: Get commit hash
+        if: steps.supabase_credentials.outputs.present == 'true'
         id: get_commit_hash
         run: |
           COMMIT_HASH=$(git rev-parse --short HEAD)
           echo "commit_hash=$COMMIT_HASH" >> $GITHUB_OUTPUT
 
       - name: Download registry.json
+        if: steps.supabase_credentials.outputs.present == 'true'
         id: download_registry
         run: |
           if supabase storage cp "ss:///radr-firmware/registry.json" ./registry.json --experimental; then
@@ -189,6 +205,7 @@ jobs:
           fi
 
       - name: Determine old commit and update registry
+        if: steps.supabase_credentials.outputs.present == 'true'
         id: update_registry
         run: |
           BRANCH_PATH="${{ steps.encode_branch.outputs.encoded_branch }}"
@@ -242,7 +259,7 @@ jobs:
           echo "old_commit=$OLD_COMMIT" >> $GITHUB_OUTPUT
 
       - name: Move existing firmware out of the way
-        if: steps.update_registry.outputs.old_commit != ''
+        if: steps.supabase_credentials.outputs.present == 'true' && steps.update_registry.outputs.old_commit != ''
         run: |
           OLD_COMMIT="${{ steps.update_registry.outputs.old_commit }}"
           BRANCH_PATH="${{ steps.encode_branch.outputs.encoded_branch }}"
@@ -254,6 +271,7 @@ jobs:
         continue-on-error: true
 
       - name: Upload firmware to Supabase Storage
+        if: steps.supabase_credentials.outputs.present == 'true'
         run: |
           BRANCH_PATH="${{ steps.encode_branch.outputs.encoded_branch }}"
           # Delete existing files if they exist (to avoid 409 Duplicate error)
@@ -268,6 +286,7 @@ jobs:
           supabase storage cp ./firmware/littlefs.bin "ss:///radr-firmware/$BRANCH_PATH/littlefs.bin" --content-type "application/octet-stream" --cache-control "no-cache" --experimental
 
       - name: Create and upload manifest.json
+        if: steps.supabase_credentials.outputs.present == 'true'
         run: |
           BRANCH_PATH="${{ steps.encode_branch.outputs.encoded_branch }}"
           # Create a temporary manifest file with the branch name replaced
@@ -278,12 +297,14 @@ jobs:
           supabase storage cp ./manifest.json "ss:///radr-firmware/$BRANCH_PATH/manifest.json" --content-type "application/json" --cache-control "no-cache" --experimental
 
       - name: Upload updated registry.json
+        if: steps.supabase_credentials.outputs.present == 'true'
         run: |
           # Delete existing registry.json if it exists, then upload the updated one
           supabase storage rm "ss:///radr-firmware/registry.json" --experimental --yes || true
           supabase storage cp ./registry.json "ss:///radr-firmware/registry.json" --content-type "application/json" --cache-control "no-cache" --experimental
 
       - name: Create GitHub Deployment
+        if: steps.supabase_credentials.outputs.present == 'true'
         id: create_deployment
         uses: actions/github-script@v9
         with:
@@ -302,6 +323,7 @@ jobs:
             return { id: deployment.data.id };
 
       - name: Create Deployment Status
+        if: steps.supabase_credentials.outputs.present == 'true'
         uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
