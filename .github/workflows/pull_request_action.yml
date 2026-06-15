@@ -104,22 +104,35 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Check documentation package
+        id: docs_package
+        run: |
+          if [ -f Documentation/pnpm-lock.yaml ]; then
+            echo "present=true" >> $GITHUB_OUTPUT
+          else
+            echo "present=false" >> $GITHUB_OUTPUT
+          fi
+
       - uses: pnpm/action-setup@v4
+        if: steps.docs_package.outputs.present == 'true'
         with:
           version: 10
 
       - uses: actions/setup-node@v6
+        if: steps.docs_package.outputs.present == 'true'
         with:
           node-version: '20'
           cache: 'pnpm'
           cache-dependency-path: Documentation/pnpm-lock.yaml
 
       - name: Install dependencies
+        if: steps.docs_package.outputs.present == 'true'
         run: |
           cd Documentation
           pnpm install
 
       - name: Validate documentation
+        if: steps.docs_package.outputs.present == 'true'
         run: |
           cd Documentation
           pnpm run mint:validate
