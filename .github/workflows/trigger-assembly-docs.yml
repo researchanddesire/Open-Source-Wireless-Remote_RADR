@@ -1,0 +1,20 @@
+name: Trigger assembly-docs rebuild
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'assembly-docs/**'
+      - 'hardware/bom.csv'
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request assembly-docs site rebuild
+        run: |
+          curl -sS --fail-with-body -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.DOCS_DISPATCH_TOKEN }}" \
+            https://api.github.com/repos/researchanddesire/assembly-docs/dispatches \
+            -d '{"event_type":"assembly-docs-rebuild","client_payload":{"repo":"RADR-OSS","ref":"'"${{ github.ref_name }}"'"}}'
