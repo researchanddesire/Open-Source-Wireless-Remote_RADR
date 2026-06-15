@@ -1,12 +1,12 @@
 ---
-description: BOM standard for hardware/<product>/bom.csv — column contract and category codes
+description: BOM standard for hardware/bom.csv — column contract and category codes
 globs: hardware/**/bom.csv
 alwaysApply: false
 ---
 
 # BOM standard (RAD)
 
-When creating or editing any `hardware/<product>/bom.csv`, follow the canonical RAD BOM
+When creating or editing `hardware/bom.csv`, follow the canonical RAD BOM
 standard. Full reference: https://dev.researchanddesire.com/meta/bom-standard/
 (source: `researchanddesire/dev-docs` `docs/meta/bom-standard.md` + `schemas/bom.schema.json`).
 The vendored schema lives at `.github/workflows/scripts/bom.schema.json` — do not hand-edit it.

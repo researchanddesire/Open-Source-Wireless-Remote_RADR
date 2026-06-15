@@ -8,8 +8,8 @@ Full license text: [`LICENCE`](LICENCE) and [`LICENSES/CERN-OHL-S-2.0.txt`](LICE
 
 ## Path map
 
-1. Hardware at `./hardware/radr/` — CERN-OHL-S v2
-2. Firmware at `./Software/` — CERN-OHL-S v2
+1. Hardware at `./hardware/` — CERN-OHL-S v2
+2. Firmware at the repository root — CERN-OHL-S v2
 3. Developer documentation at `./developer-docs/` — CERN-OHL-S v2
 4. CI at `./.github/workflows` — CERN-OHL-S v2
 

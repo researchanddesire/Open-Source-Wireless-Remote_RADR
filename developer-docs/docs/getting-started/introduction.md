@@ -35,7 +35,7 @@ RADR runs on an ESP32-S3 microcontroller with custom firmware written in C++ usi
 
 The complete firmware source is available on GitHub:
 
-- **[RADR Firmware](https://github.com/researchanddesire/radr-wireless-remote/tree/main/Software)** — Browse the source code and documentation.
+- **[RADR Firmware](https://github.com/researchanddesire/radr-wireless-remote)** — Browse the source code and documentation.
 
 ## Architecture Overview
 
@@ -76,12 +76,12 @@ The complete firmware source is available on GitHub:
 
 ```bash
 git clone https://github.com/researchanddesire/radr-wireless-remote.git
-cd radr-wireless-remote/Software
+cd radr-wireless-remote
 ```
 
 ### Step 2: Open in VS Code
 
-Open the `Software` folder in VS Code. PlatformIO will automatically detect the project configuration.
+Open the repository folder in VS Code. PlatformIO will automatically detect the project configuration.
 
 ### Step 3: Build the firmware
 
