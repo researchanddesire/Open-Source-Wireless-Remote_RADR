@@ -79,7 +79,7 @@ fi
 echo "::endgroup::"
 
 echo "::group::[RADR] Read local version from Version.h"
-VERSION_H_FILE="Software/src/constants/Version.h"
+VERSION_H_FILE="src/constants/Version.h"
 if [[ ! -f "$VERSION_H_FILE" ]]; then
   echo "::error::[ERROR] Local version file $VERSION_H_FILE not found!"
   exit 1

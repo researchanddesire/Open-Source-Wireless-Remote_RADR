@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Hardware designs under `hardware/radr/` are **CERN-OHL-S v2**.
+        Hardware designs under `hardware/` are **CERN-OHL-S v2**.
 
         BOM changes (`hardware/**/bom.csv`) must follow the [BOM standard](https://dev.researchanddesire.com/meta/bom-standard/) — fixed columns, closed category codes, `–` for empty cells. The `bom-lint` check enforces it.
   - type: textarea

@@ -80,11 +80,11 @@ jobs:
         if: ${{ steps.bot_check.outputs.is_bot != 'true' && steps.check_changes.outputs.skip != 'true' }}
         id: get_next_version
         run: |
-          chmod +x ./Software/scripts/get_next_version.sh
+          chmod +x ./scripts/get_next_version.sh
           echo "Getting next version"
           COMMIT_MSG="$(git log -1 --pretty=%B)"
           echo "COMMIT_MSG=$COMMIT_MSG"
-          ./Software/scripts/get_next_version.sh "$COMMIT_MSG"
+          ./scripts/get_next_version.sh "$COMMIT_MSG"
         shell: bash
 
       - name: Update version
@@ -94,19 +94,17 @@ jobs:
           NEXT_VERSION: ${{ steps.get_next_version.outputs.NEXT_VERSION }}
         id: version_update
         run: |
-          chmod +x ./Software/scripts/version_bump.sh
-          ./Software/scripts/version_bump.sh "$NEXT_VERSION"
+          chmod +x ./scripts/version_bump.sh
+          ./scripts/version_bump.sh "$NEXT_VERSION"
 
       - name: Build PlatformIO Project
         if: ${{ steps.bot_check.outputs.is_bot != 'true' && steps.check_changes.outputs.skip != 'true' }}
         run: |
-          cd Software
           pio run -e production
 
       - name: Build LittleFS filesystem image
         if: ${{ steps.bot_check.outputs.is_bot != 'true' && steps.check_changes.outputs.skip != 'true' }}
         run: |
-          cd Software
           pio run --target buildfs -e production
 
       - name: Install Cursor CLI
@@ -162,10 +160,10 @@ jobs:
           supabase storage rm "ss:///radr-firmware/master/version.json" --experimental --yes || true
           
           # Upload firmware binaries
-          supabase storage cp ./Software/.pio/build/production/firmware.bin "ss:///radr-firmware/master/firmware.bin" --content-type "application/octet-stream" --cache-control "no-cache" --experimental
-          supabase storage cp ./Software/.pio/build/production/partitions.bin "ss:///radr-firmware/master/partitions.bin" --content-type "application/octet-stream" --cache-control "no-cache" --experimental
-          supabase storage cp ./Software/.pio/build/production/bootloader.bin "ss:///radr-firmware/master/bootloader.bin" --content-type "application/octet-stream" --cache-control "no-cache" --experimental
-          supabase storage cp ./Software/.pio/build/production/littlefs.bin "ss:///radr-firmware/master/littlefs.bin" --content-type "application/octet-stream" --cache-control "no-cache" --experimental
+          supabase storage cp ./.pio/build/production/firmware.bin "ss:///radr-firmware/master/firmware.bin" --content-type "application/octet-stream" --cache-control "no-cache" --experimental
+          supabase storage cp ./.pio/build/production/partitions.bin "ss:///radr-firmware/master/partitions.bin" --content-type "application/octet-stream" --cache-control "no-cache" --experimental
+          supabase storage cp ./.pio/build/production/bootloader.bin "ss:///radr-firmware/master/bootloader.bin" --content-type "application/octet-stream" --cache-control "no-cache" --experimental
+          supabase storage cp ./.pio/build/production/littlefs.bin "ss:///radr-firmware/master/littlefs.bin" --content-type "application/octet-stream" --cache-control "no-cache" --experimental
           
           # Create and upload manifest.json for master
           cat .github/artifacts/manifest.json | sed "s/{{ branchName }}/master/g" > ./manifest.json

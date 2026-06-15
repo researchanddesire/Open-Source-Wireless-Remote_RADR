@@ -6,7 +6,7 @@ title: RADR Developer Documentation
 
 Firmware for the Research and Desire wireless remote (ESP32, PlatformIO).
 
-Source lives under `Software/` in this repository (CERN-OHL-S v2).
+Source lives at the repository root in the standard PlatformIO layout (CERN-OHL-S v2).
 
 ## Topics
 

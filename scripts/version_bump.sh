@@ -31,8 +31,8 @@ fi
 
 echo "[RADR] Updating Version.h to $new_version_string"
 
-# Update Software/src/constants/Version.h
-cat > Software/src/constants/Version.h << EOF
+# Update src/constants/Version.h
+cat > src/constants/Version.h << EOF
 #ifndef RADR_VERSION_H
 #define RADR_VERSION_H
 
