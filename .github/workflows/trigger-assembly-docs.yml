@@ -6,6 +6,9 @@ on:
     paths:
       - 'assembly-docs/**'
       - 'hardware/bom.csv'
+      - 'hardware/**/bom.csv'
+      - 'hardware/pcb/**'
+      - 'hardware/cables/**'
 
 jobs:
   dispatch:
