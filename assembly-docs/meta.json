@@ -1,0 +1,11 @@
+{
+  "title": "RADR Wireless Remote Assembly Docs",
+  "pages": [
+    "index",
+    "pcb-overview",
+    "cable-harnesses",
+    "bom",
+    "assembly-guide",
+    "..."
+  ]
+}

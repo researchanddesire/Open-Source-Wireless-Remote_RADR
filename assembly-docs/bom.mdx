@@ -1,17 +1,17 @@
 ---
-hide:
-  - toc
+title: Bill of Materials
+showToc: false
 ---
-# Bill of Materials
 
 The RADR wireless remote uses a custom populated PCB assembly, display, battery, 3D-printed enclosure parts, printed controls, weather stripping, and tri-lobe screws.
 
 ## Parts
 
-This parts list is generated from [`hardware/bom.csv`](../hardware/bom.csv) during the assembly-docs build. Do not edit the generated table by hand. Update the CSV instead. Parts are referenced throughout the [Assembly Guide](assembly-guide.md).
+This parts list is generated from [`hardware/bom.csv`](https://github.com/researchanddesire/RADR-OSS/blob/main/hardware/bom.csv) during the assembly-docs build. Do not edit the generated table by hand. Update the CSV instead. Parts are referenced throughout the [Assembly Guide](/radr/assembly-guide).
 
-<!-- BEGIN GENERATED BOM -->
-<!-- END GENERATED BOM -->
+import bom from "./_bom/bom.json";
+
+<BillOfMaterials data={bom} />
 
 ## Assembly Tools and Shop Supplies
 

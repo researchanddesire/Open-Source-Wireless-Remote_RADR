@@ -4,6 +4,14 @@ on:
   push:
     branches:
       - main
+    # Assembly content/configuration does not create a firmware release.
+    # Changes outside this list (including mixed docs + firmware pushes) still run.
+    paths-ignore:
+      - "assembly-docs/**"
+      - ".github/assembly-sync.json"
+      - ".github/workflows/trigger-assembly-docs.yml"
+      - ".github/workflows/version_bump.yml"
+      - "AGENTS.md"
 
 permissions:
   contents: write
