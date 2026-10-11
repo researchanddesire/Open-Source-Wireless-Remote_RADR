@@ -10,3 +10,6 @@ scratch
 
 # Local development display captures
 captures/
+
+# macOS Finder metadata
+.DS_Store
