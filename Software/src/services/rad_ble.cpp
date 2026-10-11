@@ -191,7 +191,7 @@ bool selectOssmMenuItem(MenuItemE item) {
 
 bool returnToMainMenu() {
     if (stateMachine == nullptr) return false;
-    for (uint8_t attempt = 0; attempt < 4; ++attempt) {
+    for (uint8_t attempt = 0; attempt < 6; ++attempt) {
         const String state = stateName();
         if (state == "main_menu") return true;
         bool accepted = false;
@@ -208,8 +208,11 @@ bool returnToMainMenu() {
             state == "ossm_update_none" || state == "ossm_update_wifi" ||
             state == "wmConfig" || state == "update.wifi") {
             accepted = stateMachine->process_event(left_button_pressed{});
-        } else if (state == "device_menu") {
+        } else if (state == "device_menu" || state == "ossm_setting_edit" ||
+                   state == "ossm_settings_confirm") {
             accepted = stateMachine->process_event(left_button_pressed{});
+        } else if (state == "ossm_settings") {
+            accepted = selectActiveMenuItem(MenuItemE::OSSM_SETTINGS_MAIN_MENU);
         } else if (state == "device_draw_control" ||
                    state == "simple_penetration_control") {
             if (device != nullptr && !device->isPaused)
@@ -296,6 +299,21 @@ radble::Result requestTarget(const String& path, JsonObjectConst args) {
         if (state == "main_menu")
             return targetResult(
                 path, stateMachine->process_event(left_button_pressed{}));
+        if (state.startsWith("ossm_setting") && state != "ossm_settings_saving") {
+            // Left backs out of edit/confirm (dropping pending edits) to
+            // the list, then the list returns to the controls.
+            for (uint8_t attempt = 0; attempt < 4; ++attempt) {
+                const String current = stateName();
+                if (current == "device_draw_control" ||
+                    current == "simple_penetration_control")
+                    break;
+                if (!stateMachine->process_event(left_button_pressed{}))
+                    break;
+            }
+            const String after = stateName();
+            return targetResult(path, after == "device_draw_control" ||
+                                          after == "simple_penetration_control");
+        }
         return targetResult(path, false);
     }
     if (path == "state.pause") {

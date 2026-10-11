@@ -224,12 +224,17 @@ void Device::connectionTask(void *pvParameter) {
                 continue;
             }
 
-            if (characteristic.second.pCharacteristic->canNotify() &&
-                characteristic.second.notifyCallback) {
+            if (characteristic.second.notifyCallback) {
                 // if the user has provided a notify callback, subscribe to the
-                // characteristic with the notify callback.
-                characteristic.second.pCharacteristic->subscribe(
-                    true, characteristic.second.notifyCallback);
+                // characteristic with the notify callback. RAD BLE replies
+                // are indications, so fall back to those.
+                auto *pChr = characteristic.second.pCharacteristic;
+                if (pChr->canNotify()) {
+                    pChr->subscribe(true, characteristic.second.notifyCallback);
+                } else if (pChr->canIndicate()) {
+                    pChr->subscribe(false,
+                                    characteristic.second.notifyCallback);
+                }
             }
         }
 
