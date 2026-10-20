@@ -79,6 +79,15 @@ class Device : public NimBLEClientCallbacks {
     virtual void enterStreamingMode() {}
     virtual bool isInSimplePenetrationMode() const { return false; }
 
+    // The control screen's Menu button opens a menu only when this is true.
+    // Pressing it otherwise calls onMenuBlocked() so the press is not silent.
+    virtual bool canOpenSettings() const { return isPaused; }
+    virtual void onMenuBlocked() {}
+
+    // True for devices whose Menu button opens the machine settings pages
+    // instead of the main menu.
+    virtual bool hasMachineSettings() const { return false; }
+
     // Optional low-level control surface for a connected peripheral.  Device
     // implementations route writes through their existing command transport;
     // unsupported peripherals keep the default false result.
@@ -112,6 +121,14 @@ class Device : public NimBLEClientCallbacks {
 
     virtual NimBLEUUID getServiceUUID() = 0;
     virtual const char *getName() = 0;
+
+    // Clears every display object. Devices that keep raw pointers to display
+    // objects drop them in onDisplayObjectsCleared() first.
+    void clearDisplayObjects() {
+        onDisplayObjectsCleared();
+        displayObjects.clear();
+    }
+    virtual void onDisplayObjectsCleared() {}
 
     // Display object helpers
     template <typename TDisplayObject, typename... TArgs>

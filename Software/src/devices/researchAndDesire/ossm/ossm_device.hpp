@@ -9,14 +9,18 @@
 #include <components/LinearRailGraph.h>
 #include <components/TextButton.h>
 #include <esp_wifi.h>
+#include <memory>
 #include <pages/menus.h>
 #include <services/leds.h>
 #include <structs/SettingPercents.h>
 
 #include "../../device.h"
+#include "ossm_rad_ble.h"
 #include "state/remote.h"
 
 #define OSSM_CHARACTERISTIC_UUID_COMMAND "522B443A-4F53-534D-1000-420BADBABE69"
+// RAD BLE replies to JSON written to the command characteristic (indicate)
+#define OSSM_CHARACTERISTIC_UUID_RESPONSE "522b443a-4f53-534d-1100-420badbabe69"
 #define OSSM_CHARACTERISTIC_UUID_SET_SPEED_KNOB_LIMIT \
     "522B443A-4F53-534D-1010-420BADBABE69"
 
@@ -55,8 +59,15 @@ class OSSM : public Device {
     EncoderDial *leftEncoderDial = nullptr;
     EncoderDial *rightEncoderDial = nullptr;
 
+    // How long the Menu button says "Pause First" after a blocked press
+    static constexpr uint32_t MENU_BLOCKED_MS = 1500;
+
+    // RAD BLE client for the machine settings pages
+    std::shared_ptr<OssmRadBle> radBle = std::make_shared<OssmRadBle>();
+
     explicit OSSM(const NimBLEAdvertisedDevice *advertisedDevice)
         : Device(advertisedDevice) {
+        std::weak_ptr<OssmRadBle> weakRadBle = radBle;
         characteristics = {
             {"pairing", {NimBLEUUID(OSSM_CHARACTERISTIC_UUID_PAIRING)}},
             {"command", {NimBLEUUID(OSSM_CHARACTERISTIC_UUID_COMMAND)}},
@@ -66,8 +77,19 @@ class OSSM : public Device {
             {"patternDescription",
              {NimBLEUUID(OSSM_CHARACTERISTIC_UUID_PATTERN_DESCRIPTION)}},
             {"state", {NimBLEUUID(OSSM_CHARACTERISTIC_UUID_STATE)}},
+            {"response",
+             {.uuid = NimBLEUUID(OSSM_CHARACTERISTIC_UUID_RESPONSE),
+              .notifyCallback =
+                  [weakRadBle](NimBLERemoteCharacteristic *, uint8_t *data,
+                               size_t length, bool) {
+                      if (auto client = weakRadBle.lock()) {
+                          client->onIndication(data, length);
+                      }
+                  }}},
         };
     }
+
+    ~OSSM() override { radBle->detach(); }
 
     const char *getName() override { return "OSSM"; }
     NimBLEUUID getServiceUUID() override { return NimBLEUUID(OSSM_SERVICE_ID); }
@@ -124,10 +146,8 @@ class OSSM : public Device {
             draw<TextButton>("Pause", pins::BTN_UNDER_C, DISPLAY_WIDTH / 2 - 60,
                              Display::HEIGHT - 30, 120);
 
-        // Set initial disabled state for menu button (enabled only when paused)
-        if (menuButton) {
-            menuButton->setColors(Colors::disabled, Colors::black);
-        }
+        // Menu is enabled only when paused or at speed 0
+        updateMenuButtonState();
 
         draw<LinearRailGraph>(&this->settings.stroke, &this->settings.depth, -1,
                               Display::PageHeight - 30, Display::WIDTH - 20,
@@ -245,10 +265,7 @@ class OSSM : public Device {
             });
 
             setMiddleLed(Colors::white, 50);
-            // Disable menu button in default state
-            if (menuButton) {
-                menuButton->setColors(Colors::disabled, Colors::black);
-            }
+            updateMenuButtonState();
         }
 
         // finally, we set inital preferences and go to the active mode
@@ -263,6 +280,20 @@ class OSSM : public Device {
             send("command", "go:strokeEngine");
         }
         vTaskDelay(pdMS_TO_TICKS(250));
+
+        // RAD BLE replies are indications, which cannot exceed the MTU. A
+        // new client connects without exchanging it (see device.cpp).
+        if (pClient != nullptr && pClient->getMTU() < 247) {
+            pClient->exchangeMTU();
+        }
+        auto command = characteristics.find("command");
+        auto response = characteristics.find("response");
+        radBle->attach(command != characteristics.end()
+                           ? command->second.pCharacteristic
+                           : nullptr,
+                       response != characteristics.end()
+                           ? response->second.pCharacteristic
+                           : nullptr);
 
         isConnected = true;
         isFirstConnect = false;
@@ -295,10 +326,7 @@ class OSSM : public Device {
             pauseStopButton->setColors(Colors::green, Colors::white);
         }
 
-        // Enable menu button when paused
-        if (menuButton) {
-            menuButton->setColors(Colors::textBackground, Colors::black);
-        }
+        updateMenuButtonState();
 
         // Set middle LED to red to indicate STOP state
         setMiddleLed(Colors::red, 255);
@@ -325,10 +353,8 @@ class OSSM : public Device {
             pauseStopButton->setColors(Colors::textBackground, Colors::black);
         }
 
-        // Disable menu button when resumed
-        if (menuButton) {
-            menuButton->setColors(Colors::disabled, Colors::black);
-        }
+        // Menu stays enabled after resuming while the speed is still 0
+        updateMenuButtonState();
 
         updatePatternNameFromState();
     }
@@ -379,6 +405,42 @@ class OSSM : public Device {
         return operationMode == OssmMode::SimplePenetration;
     }
 
+    bool canOpenSettings() const override {
+        return isPaused || settings.speed <= 0;
+    }
+
+    bool hasMachineSettings() const override { return true; }
+
+    void onMenuBlocked() override {
+        TextButton *button = menuButton;
+        if (button != nullptr) {
+            button->flashText("Pause First", MENU_BLOCKED_MS);
+        }
+    }
+
+    // Lights the Menu button whenever it would open the settings pages.
+    void updateMenuButtonState() {
+        TextButton *button = menuButton;
+        if (button == nullptr) return;
+        if (canOpenSettings()) {
+            button->clearFlash();
+            button->setColors(Colors::textBackground, Colors::black);
+        } else {
+            button->setColors(Colors::disabled, Colors::black);
+        }
+    }
+
+    void onDisplayObjectsCleared() override {
+        patternNameDisplay = nullptr;
+        menuButton = nullptr;
+        pauseStopButton = nullptr;
+        strokeTab = nullptr;
+        depthTab = nullptr;
+        sensationTab = nullptr;
+        leftEncoderDial = nullptr;
+        rightEncoderDial = nullptr;
+    }
+
     bool readControlSetting(const String &name, float &value) const override {
         if (name == "speed") value = settings.speed;
         else if (name == "stroke") value = settings.stroke;
@@ -427,6 +489,7 @@ class OSSM : public Device {
             return true;
         }
         settings.speed = speed;
+        updateMenuButtonState();
         speed = constrain(speed, 0, 100);
         return send("command",
                     std::string("set:speed:") + std::to_string(speed));
@@ -623,18 +686,15 @@ class OSSM : public Device {
         leftEncoder.setEncoderValue(0);
         rightEncoder.setEncoderValue(0);
 
-        // Bottom buttons — Menu (left, disabled until paused), Pause/Stop
-        // (center)
+        // Bottom buttons — Menu (left, enabled when paused or at speed 0),
+        // Pause/Stop (center)
         menuButton = draw<TextButton>("Menu", pins::BTN_UNDER_L, -5,
                                       Display::HEIGHT - 30, 90);
         pauseStopButton =
             draw<TextButton>("Pause", pins::BTN_UNDER_C, DISPLAY_WIDTH / 2 - 60,
                              Display::HEIGHT - 30, 120);
 
-        // Set initial disabled state for menu button (enabled only when paused)
-        if (menuButton) {
-            menuButton->setColors(Colors::disabled, Colors::black);
-        }
+        updateMenuButtonState();
 
         // LinearRailGraph — stroke visualization (depth fixed at 100 for full
         // range)

@@ -89,7 +89,9 @@ struct ossm_remote_state {
 
             "device_draw_control"_s + on_entry<_> / drawControl,
             "device_draw_control"_s + event<right_button_pressed>[hasDeviceMenu<>] = "device_menu"_s,
-            "device_draw_control"_s + event<left_button_pressed>[isPaused] = "main_menu"_s,
+            "device_draw_control"_s + event<left_button_pressed>[canOpenSettings && hasMachineSettings] / beginOssmSettings = "ossm_settings"_s,
+            "device_draw_control"_s + event<left_button_pressed>[canOpenSettings] = "main_menu"_s,
+            "device_draw_control"_s + event<left_button_pressed> / showMenuBlocked,
             "device_draw_control"_s + event<middle_button_pressed>[!isPaused] / softPause,
             "device_draw_control"_s + event<middle_button_pressed> / resume,
             "device_draw_control"_s + event<middle_button_long_pressed> / stop = "device_stop"_s,
@@ -108,7 +110,9 @@ struct ossm_remote_state {
 
             // SimplePenetration Controller
             "simple_penetration_control"_s + on_entry<_> / drawControl,
-            "simple_penetration_control"_s + event<left_button_pressed>[isPaused] = "main_menu"_s,
+            "simple_penetration_control"_s + event<left_button_pressed>[canOpenSettings && hasMachineSettings] / beginOssmSettings = "ossm_settings"_s,
+            "simple_penetration_control"_s + event<left_button_pressed>[canOpenSettings] = "main_menu"_s,
+            "simple_penetration_control"_s + event<left_button_pressed> / showMenuBlocked,
             "simple_penetration_control"_s + event<middle_button_pressed>[!isPaused] / softPause,
             "simple_penetration_control"_s + event<middle_button_pressed> / resume,
             "simple_penetration_control"_s + event<disconnected_event> / disconnect = "main_menu"_s,
@@ -119,6 +123,35 @@ struct ossm_remote_state {
             "simple_penetration_stop"_s + event<left_button_pressed> / start = "simple_penetration_control"_s,
             "simple_penetration_stop"_s + event<middle_button_pressed> / start = "simple_penetration_control"_s,
             "simple_penetration_stop"_s + event<disconnected_event> / disconnect = "main_menu"_s,
+
+            // OSSM machine settings (from the control screen's Menu button)
+            "ossm_settings"_s + on_entry<_> / enterOssmSettings,
+            "ossm_settings"_s + event<done> / drawOssmSettings,
+            "ossm_settings"_s + event<right_button_pressed>[isOption<>(MenuItemE::OSSM_SETTINGS_MAIN_MENU) && hasPendingOssmSettings] = "ossm_settings_confirm"_s,
+            "ossm_settings"_s + event<right_button_pressed>[isOption<>(MenuItemE::OSSM_SETTINGS_MAIN_MENU)] = "main_menu"_s,
+            "ossm_settings"_s + event<right_button_pressed>[isOssmSettingFieldSelected] = "ossm_setting_edit"_s,
+            "ossm_settings"_s + event<right_button_pressed>[isOption<>(MenuItemE::OSSM_SETTINGS_INFO)] / retryOssmSettings,
+            "ossm_settings"_s + event<left_button_pressed>[hasPendingOssmSettings] = "ossm_settings_confirm"_s,
+            "ossm_settings"_s + event<left_button_pressed>[isSimplePenetrationMode] = "simple_penetration_control"_s,
+            "ossm_settings"_s + event<left_button_pressed> = "device_draw_control"_s,
+            "ossm_settings"_s + event<disconnected_event> / disconnect = "main_menu"_s,
+
+            "ossm_setting_edit"_s + on_entry<_> / enterOssmSettingEdit,
+            "ossm_setting_edit"_s + event<right_button_pressed>[ossmSettingEditLeavesPending] / keepOssmSettingEdit = "ossm_settings_confirm"_s,
+            "ossm_setting_edit"_s + event<right_button_pressed> / keepOssmSettingEdit = "ossm_settings"_s,
+            "ossm_setting_edit"_s + event<left_button_pressed> = "ossm_settings"_s,
+            "ossm_setting_edit"_s + event<disconnected_event> / disconnect = "main_menu"_s,
+
+            "ossm_settings_confirm"_s + on_entry<_> / enterOssmSettingsConfirm,
+            "ossm_settings_confirm"_s + event<right_button_pressed>[canRestartOssmSettings] = "ossm_settings_saving"_s,
+            "ossm_settings_confirm"_s + event<middle_button_pressed> = "ossm_settings"_s,
+            "ossm_settings_confirm"_s + event<left_button_pressed> / discardOssmSettings = "ossm_settings"_s,
+            "ossm_settings_confirm"_s + event<disconnected_event> / disconnect = "main_menu"_s,
+
+            "ossm_settings_saving"_s + on_entry<_> / (drawPage(ossmSettingsSavingPage), saveOssmSettings),
+            "ossm_settings_saving"_s + event<done>[ossmSettingsSaved] / sendOssmRestart = "ossm_restarting"_s,
+            "ossm_settings_saving"_s + event<done> / resumeLeftEncoderMonitoring = "ossm_settings_confirm"_s,
+            "ossm_settings_saving"_s + event<disconnected_event> / disconnect = "main_menu"_s,
 
             // Streaming Screen
             "streaming_screen"_s + on_entry<_> / drawPage(streamingPage),

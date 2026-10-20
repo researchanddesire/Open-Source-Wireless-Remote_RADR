@@ -26,6 +26,7 @@
 #include "pages/TextPages.h"
 #include "pages/controller.h"
 #include "pages/menus.h"
+#include "pages/ossmSettings.h"
 #include "pages/ossmUpdate.h"
 #include "pages/pairing.h"
 #include "services/leftEncoderMonitor.h"
@@ -369,5 +370,31 @@ namespace actions {
     };
 
     inline auto checkOssmPairing = []() { startOssmPairingCheck(); };
+
+    inline auto showMenuBlocked = []() {
+        if (device == nullptr) return;
+        device->onMenuBlocked();
+    };
+
+    // OSSM machine settings
+    inline auto beginOssmSettings = []() { ossmSettings::begin(); };
+    inline auto enterOssmSettings = []() { ossmSettings::enterList(); };
+    inline auto drawOssmSettings = []() { ossmSettings::drawList(); };
+    inline auto retryOssmSettings = []() { ossmSettings::retryLoad(); };
+    inline auto enterOssmSettingEdit = []() { ossmSettings::enterEdit(); };
+    inline auto keepOssmSettingEdit = []() { ossmSettings::keepEdit(); };
+    inline auto enterOssmSettingsConfirm = []() {
+        ossmSettings::enterConfirm();
+    };
+    inline auto discardOssmSettings = []() { ossmSettings::discardPending(); };
+    inline auto saveOssmSettings = []() { ossmSettings::enterSaving(); };
+
+    // The speed monitor stops while saving; bring it back if the save fails.
+    inline auto resumeLeftEncoderMonitoring = []() {
+        if (device != nullptr &&
+            device->needsPersistentLeftEncoderMonitoring()) {
+            startLeftEncoderMonitoring();
+        }
+    };
 
 }  // namespace actions

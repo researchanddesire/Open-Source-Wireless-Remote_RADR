@@ -228,16 +228,21 @@ void drawMenuTask(void *pvParameters) {
     auto isInCorrectState = []() {
         return stateMachine->is("main_menu"_s) ||
                stateMachine->is("settings_menu"_s) ||
-               stateMachine->is("device_menu"_s);
+               stateMachine->is("device_menu"_s) ||
+               stateMachine->is("ossm_settings"_s);
     };
 
-    auto isInNestedState = []() { return stateMachine->is("device_menu"_s); };
+    // Device menus that keep the left encoder driving the device
+    auto isInNestedState = []() {
+        return stateMachine->is("device_menu"_s) ||
+               stateMachine->is("ossm_settings"_s);
+    };
 
     // Ensure global handle is set for lifecycle coordination
     menuTaskHandle = xTaskGetCurrentTaskHandle();
 
     // Mark encoder display as needing creation for device menu
-    if (device != nullptr && stateMachine->is("device_menu"_s) &&
+    if (device != nullptr && isInNestedState() &&
         device->needsPersistentLeftEncoderMonitoring()) {
         encoderDisplayNeedsCreation = true;
     }

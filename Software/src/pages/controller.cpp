@@ -31,7 +31,7 @@ void stopControllerTask()
         controllerTaskHandle = nullptr;
         vTaskSuspend(stuck);
         deletePsramTask(stuck);
-        if (device != nullptr) device->displayObjects.clear();
+        if (device != nullptr) device->clearDisplayObjects();
         ESP_LOGW(TAG, "Controller task force-stopped");
     }
     controllerExitRequested = false;
@@ -62,7 +62,7 @@ void drawControllerTask(void *pvParameters)
         vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 
-    device->displayObjects.clear();
+    device->clearDisplayObjects();
     // give other tasks a chance to catch up.
     vTaskDelay(100 / portTICK_PERIOD_MS);
 
@@ -147,7 +147,7 @@ void drawControllerTask(void *pvParameters)
     {
         // Normal exit (state left the control screen): release UI objects.
         // On a requested stop the new owner clears them itself.
-        device->displayObjects.clear();
+        device->clearDisplayObjects();
     }
 
     controllerTaskHandle = nullptr;

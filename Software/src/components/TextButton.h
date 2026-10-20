@@ -8,6 +8,7 @@
 #include "constants/Colors.h"
 #include "DisplayObject.h"
 #include "../services/display.h"
+#include "text_fit_logic.h"
 
 // Special constant to indicate no pin assignment (visual-only button)
 #define NO_PIN 255
@@ -25,6 +26,10 @@ private:
     uint16_t pressedTextColor = Colors::black;
     uint16_t pressedBackgroundColor = Colors::white;
     
+    // Temporary label shown by flashText() until flashUntilMs
+    String restoreText;
+    uint32_t flashUntilMs = 0;
+
     // Track changes for redraw
     String lastText;
     uint16_t lastTextColor;
@@ -43,6 +48,23 @@ public:
     // Methods to dynamically change button appearance
     void setText(const String &text) {
         buttonText = text;
+        flashUntilMs = 0;
+    }
+
+    // Shows `text` for `durationMs`, then restores the current label.
+    // Calling it again restarts the timer.
+    void flashText(const String &text, uint32_t durationMs) {
+        if (flashUntilMs == 0) restoreText = buttonText;
+        buttonText = text;
+        flashUntilMs = millis() + durationMs;
+        if (flashUntilMs == 0) flashUntilMs = 1;
+    }
+
+    // Restores the label replaced by flashText() straight away.
+    void clearFlash() {
+        if (flashUntilMs == 0) return;
+        buttonText = restoreText;
+        flashUntilMs = 0;
     }
 
     void setColors(uint16_t backgroundColor = Colors::textBackground, uint16_t textColor = Colors::white) {
@@ -52,6 +74,11 @@ public:
 
     bool shouldDraw() override
     {
+        if (flashUntilMs != 0 &&
+            static_cast<int32_t>(millis() - flashUntilMs) >= 0) {
+            clearFlash();
+        }
+
         bool currentState = false;
         bool stateChanged = false;
         
@@ -97,15 +124,26 @@ public:
             int16_t x1, y1;
             uint16_t textWidth, textHeight;
             tft.getTextBounds(buttonText.c_str(), 0, 0, &x1, &y1, &textWidth, &textHeight);
-            
-            // Horizontal centering
-            int16_t textX = x + (width - textWidth) / 2;
-            
-            // Vertical centering - using same formula as Device Stopped screen buttons
-            int16_t textY = y + (height + textHeight) / 2;
-            
-            tft.setCursor(textX, textY);
-            tft.print(buttonText);
+
+            if (text_fit::fitsButton(textWidth, width)) {
+                // Horizontal centering
+                int16_t textX = x + (width - textWidth) / 2;
+
+                // Vertical centering - using same formula as Device Stopped screen buttons
+                int16_t textY = y + (height + textHeight) / 2;
+
+                tft.setCursor(textX, textY);
+                tft.print(buttonText);
+            } else {
+                // Too wide: use the smaller built-in font, whose cursor is
+                // the top-left corner rather than the baseline.
+                tft.setFont();
+                tft.setTextSize(1);
+                int16_t textX = x + (width - text_fit::builtinTextWidth(buttonText.length())) / 2;
+                tft.setCursor(textX, text_fit::builtinTextTop(y, height));
+                tft.print(buttonText);
+                tft.setFont(&FreeSans9pt7b);
+            }
             
             xSemaphoreGive(displayMutex);
         }

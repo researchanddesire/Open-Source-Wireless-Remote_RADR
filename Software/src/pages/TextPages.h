@@ -71,6 +71,9 @@ extern const TextPage ossmRestartConfirmPage;
 extern const TextPage ossmRestartingPage;
 extern const TextPage streamingPage;
 
+// OSSM Settings Pages (defined in ossmSettings.cpp)
+extern const TextPage ossmSettingsSavingPage;
+
 // OSSM Pairing Pages (defined in pairing.cpp)
 extern const TextPage ossmPairingConnectingPage;
 extern const TextPage ossmPairingSuccessPage;

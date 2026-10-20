@@ -1,4 +1,5 @@
 #include "events.hpp"
+#include "pages/ossmSettings.h"
 #include "services/encoder.h"
 #include "tasks/update.h"
 
@@ -56,6 +57,34 @@ const auto hasDeviceSettingsMenu = []() -> bool {
 
 const auto isPaused = []() -> bool {
     return device != nullptr && device->isPaused;
+};
+
+const auto canOpenSettings = []() -> bool {
+    return device != nullptr && device->canOpenSettings();
+};
+
+const auto hasMachineSettings = []() -> bool {
+    return device != nullptr && device->hasMachineSettings();
+};
+
+const auto isOssmSettingFieldSelected = []() -> bool {
+    return ossmSettings::isFieldSelected();
+};
+
+const auto hasPendingOssmSettings = []() -> bool {
+    return ossmSettings::hasPending();
+};
+
+const auto ossmSettingEditLeavesPending = []() -> bool {
+    return ossmSettings::editLeavesPending();
+};
+
+const auto canRestartOssmSettings = []() -> bool {
+    return ossmSettings::canRestart();
+};
+
+const auto ossmSettingsSaved = []() -> bool {
+    return ossmSettings::saveSucceeded();
 };
 
 const auto isConnected = []() -> bool {

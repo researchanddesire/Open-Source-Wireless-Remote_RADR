@@ -28,7 +28,10 @@ enum MenuItemE {
     OSSM_PAIRING,
     OSSM_UPDATE,
     OSSM_HELP,
-    OSSM_RESTART
+    OSSM_RESTART,
+    OSSM_SETTINGS_MAIN_MENU,
+    OSSM_SETTING_FIELD,
+    OSSM_SETTINGS_INFO
 };
 
 struct MenuItem {
