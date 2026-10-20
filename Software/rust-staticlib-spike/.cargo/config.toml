@@ -1,0 +1,17 @@
+[build]
+target = "xtensa-esp32s3-espidf"
+
+[target.xtensa-esp32s3-espidf]
+rustflags = ["--cfg", "espidf_time64"]
+
+[unstable]
+build-std = ["std", "panic_abort"]
+
+[env]
+MCU = "esp32s3"
+# Must match framework-arduinoespressif32-libs (esp-idf: v5.5.5 b774170ff46).
+ESP_IDF_VERSION = "v5.5.5"
+ESP_IDF_TOOLS_INSTALL_DIR = "global"
+# sdkconfig.defaults is derived from the Arduino core's esp32s3 sdkconfig for the
+# qio_opi variant by tools/derive_sdkconfig.py. Relative to this crate.
+ESP_IDF_SDKCONFIG_DEFAULTS = "sdkconfig.defaults;sdkconfig.bindings"

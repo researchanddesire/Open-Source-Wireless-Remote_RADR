@@ -1,0 +1,5 @@
+# Applied after sdkconfig.defaults. These only affect the throwaway ESP-IDF
+# image esp-idf-sys builds to generate bindings, never the Arduino libraries
+# the static library is linked against.
+# CONFIG_PARTITION_TABLE_CUSTOM is not set
+CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y
