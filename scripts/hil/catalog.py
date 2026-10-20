@@ -44,7 +44,7 @@ PRODUCTS = {
     'ossm': {'root': 'Software', 'variants': {
         '4mb': lane('esp32', 4, OSSM_4MB),
         '16mb': lane('esp32', 16, OSSM_16MB)}},
-    'radr': {'root': 'Software', 'variants': {
+    'radr': {'root': '.', 'variants': {
         'r8': lane('esp32s3', 16, S3_PARTITIONS, 'r8', filesystem=True)}},
 }
 REPOSITORIES = {

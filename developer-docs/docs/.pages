@@ -1,0 +1,11 @@
+title: RADR
+nav:
+  - index.md
+  - getting-started
+  - communication
+  - device-registry
+  - ota-updates
+  - hardware
+  - development
+  - tools
+  - license.md

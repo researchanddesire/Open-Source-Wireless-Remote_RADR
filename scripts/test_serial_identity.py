@@ -7,8 +7,7 @@ import subprocess
 import tempfile
 import unittest
 
-ROOT = Path(__file__).resolve().parents[1]
-PROJECT = ROOT / 'Software' if (ROOT / 'Software/src').exists() else ROOT
+PROJECT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location('identity_build', PROJECT/'serial_identity_build.py')
 build = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(build)

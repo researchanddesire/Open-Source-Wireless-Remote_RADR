@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "hubRepository": "researchanddesire/rad-app",
+  "hubPath": "apps/docs-ohai/content",
+  "spokeRepository": "researchanddesire/RADR-OSS",
+  "spokePath": "assembly-docs",
+  "product": "radr",
+  "hubCommit": "1b2e12f7bdef4b8d276ca5f5a015a55d3f347ee2"
+}

@@ -19,7 +19,7 @@ jobs:
       - name: Check for firmware or release workflow changes
         id: check_changes
         run: |
-          if git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -Eq "^(Software/|\.github/scripts/|\.github/workflows/)"; then
+          if git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -Eq "^(src|include|lib|data|config|test|ButtplugIO|\.github/scripts|\.github/workflows)/|^scripts/[^/]+\.sh$|^(platformio\.ini|firmware_build_metadata\.py|serial_identity_build\.py)$"; then
             echo "Firmware-affecting changes detected"
             echo "changes_detected=true" >> $GITHUB_OUTPUT
           else
@@ -52,13 +52,11 @@ jobs:
 
       - name: Build PlatformIO Project
         run: |
-          cd Software
           pio run -e staging
           pio run -e production
 
       - name: Build LittleFS filesystem image
         run: |
-          cd Software
           pio run --target buildfs -e staging
           pio run --target buildfs -e production
 
@@ -70,11 +68,11 @@ jobs:
           for PIO_ENV in staging production; do
             python .github/scripts/build_web_installer.py \
               --profile esp32s3-16mb \
-              --build-dir "Software/.pio/build/$PIO_ENV" \
-              --filesystem "Software/.pio/build/$PIO_ENV/littlefs.bin" \
-              --partition-table Software/partition.csv \
+              --build-dir ".pio/build/$PIO_ENV" \
+              --filesystem ".pio/build/$PIO_ENV/littlefs.bin" \
+              --partition-table config/partition.csv \
               --filesystem-partition spiffs \
-              --output "Software/.pio/build/$PIO_ENV/web-installer.bin"
+              --output ".pio/build/$PIO_ENV/web-installer.bin"
           done
 
       - name: Test immutable publisher
@@ -88,11 +86,11 @@ jobs:
         with:
           name: firmware-bin
           path: |
-            Software/.pio/build/production/firmware.bin
-            Software/.pio/build/production/partitions.bin
-            Software/.pio/build/production/bootloader.bin
-            Software/.pio/build/production/littlefs.bin
-            Software/.pio/build/production/web-installer.bin
+            .pio/build/production/firmware.bin
+            .pio/build/production/partitions.bin
+            .pio/build/production/bootloader.bin
+            .pio/build/production/littlefs.bin
+            .pio/build/production/web-installer.bin
           retention-days: 14
 
   check:
@@ -120,7 +118,6 @@ jobs:
 
       - name: Check PlatformIO Project
         run: |
-          cd Software
           pio pkg install -e production
           pio check --skip-packages --fail-on-defect high -e production -f src
 

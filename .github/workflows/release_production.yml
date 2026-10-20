@@ -66,17 +66,17 @@ jobs:
       - name: Prepare GitHub Pages latest bridge
         run: |
           test -f firmware/firmware.bin
-          rm -rf docs/v/latest
-          mkdir -p docs/v/latest
-          cp firmware/firmware.bin docs/v/latest/firmware.bin
-          cp firmware/version.json docs/v/latest/version.json
+          rm -rf ota/v/latest
+          mkdir -p ota/v/latest
+          cp firmware/firmware.bin ota/v/latest/firmware.bin
+          cp firmware/version.json ota/v/latest/version.json
           rm -rf firmware
 
       - name: Publish GitHub Pages latest bridge
         run: |
-          git add docs/v/latest
+          git add ota/v/latest
           if git diff --cached --quiet; then
-            echo "docs/v/latest already points to this release" >> "$GITHUB_STEP_SUMMARY"
+            echo "ota/v/latest already points to this release" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           git config user.name "rad-version-control[bot]"
@@ -85,7 +85,7 @@ jobs:
           git push origin HEAD:main
 
       - name: Summary
-        run: echo "master, production, and docs/v/latest now point to validated release ${{ inputs.release_id }} (v${{ steps.release.outputs.version }})" >> "$GITHUB_STEP_SUMMARY"
+        run: echo "master, production, and ota/v/latest now point to validated release ${{ inputs.release_id }} (v${{ steps.release.outputs.version }})" >> "$GITHUB_STEP_SUMMARY"
 
   rebuild-registry:
     needs: alias
