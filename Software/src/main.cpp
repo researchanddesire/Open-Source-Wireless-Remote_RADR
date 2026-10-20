@@ -24,6 +24,10 @@
 #include "state/remote.h"
 #include "tasks/update.h"
 
+#ifdef RADR_RUST_STATICLIB
+#include "radr_rust.h"
+#endif
+
 #if !defined(CONFIG_ESP_IPC_TASK_STACK_SIZE) || \
     CONFIG_ESP_IPC_TASK_STACK_SIZE < 2048
 #error "RADR requires an ESP-IDF IPC task stack of at least 2048 bytes"
@@ -108,6 +112,11 @@ void setup() {
 
     setupAnimatedIcons();
     setupIdleMonitor();
+
+#ifdef RADR_RUST_STATICLIB
+    const int rustStarted = radr_rust_start();
+    ESP_LOGI(TAG, "Rust runtime start: %d", rustStarted);
+#endif
 
     const BaseType_t buttonTaskCreated = xTaskCreatePinnedToCore(
         [](void *pvParameters) {

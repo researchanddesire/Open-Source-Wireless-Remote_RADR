@@ -1,0 +1,45 @@
+[package]
+name = "radr-rust-staticlib"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+# Linked into the Arduino firmware by ../scripts/rust_staticlib.py. ESP-IDF
+# itself comes from the prebuilt Arduino libraries; esp-idf-sys only supplies
+# bindings generated against the same ESP-IDF tag and sdkconfig.
+[lib]
+name = "radr_rust"
+crate-type = ["staticlib"]
+
+[features]
+default = []
+buttplug = ["dep:buttplug_core", "dep:buttplug_server", "dep:buttplug_server_device_config"]
+
+[profile.dev]
+opt-level = "z"
+panic = "abort"
+
+[profile.release]
+codegen-units = 1
+debug = false
+# Fat LTO miscompiled Buttplug device creation on Xtensa in the Rust POC.
+lto = false
+opt-level = "s"
+panic = "abort"
+
+[dependencies]
+# Bindings only: no binstart/libstart (Arduino owns app_main) and no
+# esp-idf-hal/svc (Arduino owns the peripherals; hal 0.46.2 also fails to
+# compile against ESP-IDF 5.5.5 with the Arduino sdkconfig).
+esp-idf-sys = { version = "0.37.2", default-features = false, features = ["std"] }
+tokio = { version = "1.53.1", default-features = false, features = ["rt", "sync", "time"] }
+
+buttplug_core = { git = "https://github.com/buttplugio/buttplug", rev = "9571b3db42ee2d7b3342ab9d40eb5c9e45679444", default-features = false, features = ["tokio-runtime"], optional = true }
+buttplug_server = { git = "https://github.com/buttplugio/buttplug", rev = "9571b3db42ee2d7b3342ab9d40eb5c9e45679444", default-features = false, features = ["tokio-runtime"], optional = true }
+buttplug_server_device_config = { git = "https://github.com/buttplugio/buttplug", rev = "9571b3db42ee2d7b3342ab9d40eb5c9e45679444", optional = true }
+
+[build-dependencies]
+embuild = "0.33"
+
+[patch.crates-io]
+dashmap = { path = "vendor/dashmap" }
