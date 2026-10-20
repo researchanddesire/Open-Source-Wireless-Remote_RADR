@@ -7,10 +7,11 @@ Guidance for agents working in this product repository.
 - The PlatformIO firmware project lives at the repository root: `platformio.ini`,
   `src/`, `include/`, `lib/`, `data/`, `test/`, and `config/` (boards and
   `partition.csv`). Run `pio` commands from the root.
-- `hardware/` holds print files, PCB sources, cables, CAD, and `bom.csv`.
+- `hardware/` holds `Print Files/`, `Photos/`, `pcb/`, `cad/`, `cables/`, and `bom.csv`.
 - `developer-docs/` is the MkDocs developer site; `assembly-docs/` is the hub
   mirror described below.
-- `ota/` is the GitHub Pages payload, including the production `v/latest` bridge.
+- No GitHub Pages. Firmware releases publish only to Supabase: immutable
+  releases, then the `master`, `production`, and `alpha` aliases.
 
 
 ## Technician Build PC
@@ -62,27 +63,11 @@ Guidance for agents working in this product repository.
 
 ## Ohai Assembly Docs Contract
 
-This repository is the English-only radr spoke of the rad-app hub.
-`assembly-docs/**` mirrors only
-`rad-app/apps/docs-ohai/content/docs/radr/**`. Hub `page.en.mdx` becomes
-`page.mdx` here, and `meta.en.json` becomes `meta.json`. Product assets,
-KiCad sources and `_bom/` snapshots travel unchanged. Keep CSV, provenance and
-generated JSON together; do not add translated pages or other products.
-
-The notifier wakes rad-app after content changes. Reviewed sync PRs import to
-hub staging, then fan out to the full mirror. Never sync directly to
-assembly-docs or another spoke. `.github/assembly-sync.json` is the hub-managed
-baseline; do not hand-edit it. Initial replacement of legacy MkDocs content
-requires a separately reviewed hub seed PR. After seeding, use Fumadocs
-`meta.json` and MDX; do not restore `site.yml`, `nav.yml`, or generated HTML
-BOM markers. Hardware BOM source remains human-owned and outside content sync.
-
-Synchronization runs main to main only; staging receives assembly docs
-through the main-to-staging back-merge. The notifier uses `RAD_VERSION_CONTROL_APP_ID` and
-`RAD_VERSION_CONTROL_PRIVATE_KEY` with a token scoped only to rad-app.
-
-Hardware source folders are `hardware/cad/`, `hardware/pcb/`, and
-`hardware/cables/`.
+- `assembly-docs/` on `main` is the authoritative source for the RADR pages on ohai.researchanddesire.com. The rad-app hub (`scripts/assembly-sync/config.json` in researchanddesire/rad-app) imports it main to main only and merges the import automatically. Staging is never synced; for documentation, `main` always wins.
+- `.github/workflows/trigger-assembly-docs.yml` notifies the hub on pushes to `main` that touch `assembly-docs/**`, and the hub also polls hourly. There is no checkpoint file.
+- Every change to `assembly-docs/` on `main`, including deletions, reaches the live site within minutes without review. Do not delete or move written documentation without AJ's approval, and do not rewrite `main` history.
+- Page files are `.mdx` without a language suffix; the hub publishes them as `docs/radr/<page>.en.mdx`. Translations live in researchanddesire/assembly-docs.
+- Keep `assembly-docs/_bom/source.json` and `bom.json` consistent with `_bom/bom.csv`: `bom.json` is the source fields plus the parsed columns and rows. The hub rejects stale or mismatched BOM data.
 
 ## BOM And Cable Rules
 

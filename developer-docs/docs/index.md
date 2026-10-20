@@ -12,6 +12,6 @@ Source lives at the repository root in the standard PlatformIO layout (CERN-OHL-
 
 - **BLE** — device scanning and protocol bridges
 - **Device registry** — supported OSSM, Lovense, and Buttplug IO devices
-- **OTA** — GitHub Pages firmware channel
+- **OTA** — over-the-air firmware updates
 
 User guides: [docs.researchanddesire.com/radr](https://docs.researchanddesire.com/radr/).
