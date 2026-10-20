@@ -1,0 +1,39 @@
+name: Sync BOM schema
+
+# Pulls the canonical BOM schema from researchanddesire/dev-docs into this repo
+# (hardware/bom.schema.json is vendored, read-only). Opens a PR when it changes.
+# Triggered weekly, manually, or by a repository_dispatch from dev-docs.
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'   # Mondays
+  workflow_dispatch:
+  repository_dispatch:
+    types: [bom-schema-update]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch canonical schema
+        run: |
+          curl -fsSL \
+            https://raw.githubusercontent.com/researchanddesire/dev-docs/main/schemas/bom.schema.json \
+            -o .github/workflows/scripts/bom.schema.json
+      - name: Open PR if schema changed
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: chore/sync-bom-schema
+          title: 'chore: sync BOM schema from dev-docs'
+          commit-message: 'chore: sync bom.schema.json from dev-docs'
+          body: |
+            Vendored `.github/workflows/scripts/bom.schema.json` updated from the canonical source
+            in [researchanddesire/dev-docs](https://github.com/researchanddesire/dev-docs/blob/main/schemas/bom.schema.json).
+
+            See the [BOM standard](https://dev.researchanddesire.com/meta/bom-standard/).
+          delete-branch: true

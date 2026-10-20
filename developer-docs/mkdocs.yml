@@ -1,0 +1,47 @@
+site_name: RADR Developer Docs
+site_url: https://dev.researchanddesire.com/radr/
+repo_url: https://github.com/researchanddesire/Open-Source-Wireless-Remote_RADR
+repo_name: Open-Source-Wireless-Remote_RADR
+
+theme:
+  name: material
+
+nav:
+  - Overview: index.md
+  - Getting Started:
+      - Introduction: getting-started/introduction.md
+  - Communication:
+      - BLE: communication/ble.md
+  - Device Registry:
+      - Introduction: device-registry/introduction.md
+  - OTA Updates:
+      - Introduction: ota-updates/introduction.md
+  - Hardware:
+      - Overview: hardware/index.md
+      - Getting Started: hardware/getting-started.md
+      - PCB: hardware/pcb.md
+      - Bill of Materials: hardware/bom.md
+      - Printed Parts:
+          - Overview: hardware/printed-parts/index.md
+          - Part-by-Part:
+              - Overview: hardware/printed-parts/part-by-part/index.md
+              - Remote Top: hardware/printed-parts/part-by-part/remote-top.md
+              - Remote Bottom: hardware/printed-parts/part-by-part/remote-bottom.md
+              - Remote Knob: hardware/printed-parts/part-by-part/remote-knob.md
+              - Buttons: hardware/printed-parts/part-by-part/buttons.md
+              - Power Switch: hardware/printed-parts/part-by-part/power-switch.md
+              - OSSM Remote Clip: hardware/printed-parts/part-by-part/ossm-remote-clip.md
+      - Specifications:
+          - Overview: hardware/specifications/index.md
+          - Battery and Power: hardware/specifications/battery-and-power.md
+          - Feedback and Indicators: hardware/specifications/feedback-and-indicators.md
+  - Development:
+      - Display Capture: development/screen-capture.md
+      - Serial Identity: development/serial-identity.md
+  - Tools:
+      - Web Flasher: tools/web-flasher.md
+  - License: license.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences
