@@ -27,7 +27,9 @@ Guidance for agents working in this product repository.
 - Firmware changes enter `staging` first: branch from `origin/staging` and open the PR into `staging`. Promote with a same-repository `staging` → `main` PR.
 - A production fix may take firmware to `main` directly from a `fix/<issue>` branch (an owner prefix such as `AJ/fix/<issue>` also works) started from `origin/main`.
 - Changes outside the firmware directory (documentation, hardware, BOMs, workflows) may open their PR straight into `main`; they need no build or hardware checks. `PR target policy` enforces these rules.
-- After every merge into `main` that is not a promotion, `hotfix-sync.yml` merges `main` back into `staging` directly (main wins documentation, staging keeps its own firmware version) and opens a `main` → `staging` PR only when a conflict needs a person.
+- On every push to `main` and once a day, `hotfix-sync.yml` merges `main` back into `staging` directly as `rad-version-control[bot]` (main wins documentation and the firmware version). It opens a non-draft `main` → `staging` PR only when staging changed the same code.
+- Firmware versions are allocated only for merges into `main`: `publish_firmware.yml` runs `.github/scripts/allocate_version.sh` (identical in every firmware repository), commits `AUTO: Version bump main <version>` to `Version.h` and `version.json` as `rad-version-control[bot]`, then builds, signs and publishes the candidate. Staging merges allocate nothing. Never hand-edit the version.
+- `rad-version-control[bot]` bypasses every branch ruleset so version bumps and syncs push directly. Never open draft PRs.
 - Squash feature and fix PRs into one focused commit with a concise, imperative title. Merge `staging` → `main` promotions and `main` → `staging` sync PRs with a merge commit; never squash or rebase them.
 - Use matching branch names and linked pull requests for changes spanning RAD App or another firmware repository.
 - Staging firmware reports the `staging` track and checks `https://staging.researchanddesire.com`. Main firmware reports `main` and checks `https://dashboard.researchanddesire.com`.
@@ -54,7 +56,7 @@ Guidance for agents working in this product repository.
 - PRs into `staging` or `main` that change the firmware directory, or the validation tooling (`scripts/hil/`, `pr-firmware.yml`, `hardware-run.yml`, `.github/scripts/hil_evidence.py`), build every hardware variant and run the exact staging bundle for the PR merge SHA on the shared Test Rig. Other PRs skip both; `Build validation` and `Hardware validation` then pass without work.
 - `PR target policy`, `Build validation` and `Hardware validation` are required on `staging` and `main`.
 - The rig records the product's camera for the whole run; `Hardware evidence` comments on the PR with each device's video and result, pass or fail. Video never decides a result.
-- Merging a firmware change into `staging` or `main` allocates the next version and publishes a signed candidate through `publish_firmware.yml`.
+- Merging a firmware change into `main` allocates the next version and publishes a signed candidate through `publish_firmware.yml`; staging merges do not.
 - Firmware bundles and hardware evidence are Actions artifacts, never tracked files.
 - The reviewed harness and fixture inventory live outside the runner work directory.
 - Never infer product identity or flash capacity from a COM port or advertising name.

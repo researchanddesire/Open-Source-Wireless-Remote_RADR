@@ -4,7 +4,8 @@ on:
   # Manual runs republish the current branch head after a failed candidate.
   workflow_dispatch:
   push:
-    branches: [main, staging]
+    # Versions are allocated and candidates published only for merges into main.
+    branches: [main]
     paths:
       # The firmware directory only: a change here allocates the next version and
       # publishes a signed candidate. Keep in sync with FIRMWARE_PATHS in
@@ -102,51 +103,10 @@ jobs:
         id: version
         env:
           PR_TITLE: ${{ steps.pull_request.outputs.title }}
-        run: |
-          set -euo pipefail
-          SOURCE_VERSION="$(python scripts/release_version.py read --header src/constants/Version.h)"
-          BUMP_TYPE="$(python scripts/release_version.py bump-type --title "$PR_TITLE")"
-          RESPONSE="$(curl --fail --silent --show-error \
-            --retry 5 \
-            --retry-delay 2 \
-            --retry-max-time 60 \
-            --header "Authorization: Bearer $FIRMWARE_PUBLISH_TOKEN" \
-            --header "Content-Type: application/json" \
-            --data "$(jq -n \
-              --arg track "$GITHUB_REF_NAME" \
-              --arg deviceType "radr" \
-              --arg bump "$BUMP_TYPE" \
-              --arg sourceVersion "$SOURCE_VERSION" \
-              '{track: $track, deviceType: $deviceType, bump: $bump, sourceVersion: $sourceVersion}')" \
-            "https://dashboard.researchanddesire.com/api/internal/firmware/v1/versions/next")"
-          NEXT_VERSION="$(jq -er '.nextVersion' <<< "$RESPONSE")"
-          python scripts/release_version.py write \
-            --header src/constants/Version.h \
-            --version "$NEXT_VERSION" \
-            --version-json version.json
-          test "$(python scripts/release_version.py read --header src/constants/Version.h)" = "$NEXT_VERSION"
-          test "$(jq -r '[.major, .minor, .patch] | map(tostring) | join(".")' version.json)" = "$NEXT_VERSION"
-          UNEXPECTED="$(git diff --name-only | grep -Ev '^(src/constants/Version\.h|version\.json)$' || true)"
-          if [[ -n "$UNEXPECTED" ]]; then
-            echo "Unexpected versioning changes:"
-            echo "$UNEXPECTED"
-            exit 1
-          fi
-          git add src/constants/Version.h version.json
-          if git diff --cached --quiet; then
-            echo "Version allocation did not change the canonical files"
-            exit 1
-          fi
-          git config user.name "rad-version-control[bot]"
-          git config user.email "rad-version-control[bot]@users.noreply.github.com"
-          git commit -m "AUTO: Version bump $GITHUB_REF_NAME $NEXT_VERSION"
-          git push origin "HEAD:$GITHUB_REF_NAME"
-          RELEASE_BUILD_SHA="$(git rev-parse HEAD)"
-          echo "RELEASE_BUILD_SHA=$RELEASE_BUILD_SHA" >> "$GITHUB_ENV"
-          echo "release_build_sha=$RELEASE_BUILD_SHA" >> "$GITHUB_OUTPUT"
-          echo "version=$NEXT_VERSION" >> "$GITHUB_OUTPUT"
-          echo "bump=$BUMP_TYPE" >> "$GITHUB_OUTPUT"
-
+          DEVICE_TYPE: radr
+          VERSION_HEADER: src/constants/Version.h
+          RELEASE_VERSION: scripts/release_version.py
+        run: bash .github/scripts/allocate_version.sh
       - name: Install PlatformIO
         run: python -m pip install platformio==6.1.19
 
