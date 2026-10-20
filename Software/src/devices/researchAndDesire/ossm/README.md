@@ -8,9 +8,11 @@
 
 ## Active Characteristics
 
+The remote's source of truth is `ossm_device.hpp`.
+
 ### 1. Command Characteristic (Write)
 
-- **UUID**: `522b443a-4f53-534d-0002-420badbabe69`
+- **UUID**: `522b443a-4f53-534d-1000-420badbabe69`
 - **Purpose**: Send control commands
 
 **Commands**:
@@ -33,7 +35,7 @@ go:menu                  # Return to main menu
 
 ### 2. State Characteristic (Read/Notify)
 
-- **UUID**: `522b443a-4f53-534d-1000-420badbabe69`
+- **UUID**: `522b443a-4f53-534d-2000-420badbabe69`
 - **Purpose**: Monitor device state and settings
 
 **State JSON Format**:
@@ -59,7 +61,7 @@ go:menu                  # Return to main menu
 
 ### 3. Speed Knob Config Characteristic (Write)
 
-- **UUID**: `522b443a-4f53-534d-0010-420badbabe69`
+- **UUID**: `522b443a-4f53-534d-1010-420badbabe69`
 - **Purpose**: Configure speed knob behavior
 
 **Values**:
@@ -69,7 +71,7 @@ go:menu                  # Return to main menu
 
 ### 4. Pattern List Characteristic (Read)
 
-- **UUID**: `522b443a-4f53-534d-2000-420badbabe69`
+- **UUID**: `522b443a-4f53-534d-3000-420badbabe69`
 - **Purpose**: Get available stroke patterns
 
 **Pattern JSON Format**:
@@ -85,6 +87,19 @@ go:menu                  # Return to main menu
   { "name": "Insist", "idx": 6 }
 ]
 ```
+
+### 5. Pattern Description Characteristic (Write/Read)
+
+- **UUID**: `522b443a-4f53-534d-3010-420badbabe69`
+- **Purpose**: Get a pattern's description
+- **Usage**: Write a pattern `idx`, then read the description string
+
+### 6. Pairing Characteristic (Read/Write)
+
+- **UUID**: `522b443a-4f53-534d-0010-420badbabe69`
+- **Purpose**: Device identity and Wi-Fi credential sharing
+- **Read**: `MAC;chipModel;wifiConnected;md5;version;efuseMacHex`
+- **Write**: `9;SSID;PASSWORD` shares Wi-Fi credentials with the OSSM
 
 ## Connection Flow
 
