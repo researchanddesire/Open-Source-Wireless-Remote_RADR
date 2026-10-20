@@ -88,10 +88,6 @@ def validate(directory, repository, build_sha, run_id, run_attempt, variants=Non
         if entry.get('image_sha256') != image_digest(app):
             raise ValueError('application runtime identity mismatch')
         validate_partitions(read_component(directory, variant, 'partitions.bin'), spec)
-        # The public Trainer export contract reserves 16 KiB. The private
-        # Trainer enforces its deployed slot boundary without that export rule.
-        if repository == 'researchanddesire/DT_Trainer-OSS' and len(app)+16384 > regions(spec)['firmware.bin'][1]:
-            raise ValueError('public Trainer image lacks the required 16 KiB OTA reserve')
     return manifest
 
 

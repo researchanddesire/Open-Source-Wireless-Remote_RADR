@@ -6,15 +6,15 @@ PR head SHA. Production profiles compile; only staging artifacts reach fixtures.
 
 | Repositories | Staging and production suffixes | Physical coverage |
 | --- | --- | --- |
-| Lockbox, Lockbox-OSS | r2, r8 | Both 16 MB ESP32-S3 boards, verified R2/R8 PSRAM |
-| DT_Trainer, DT_Trainer-OSS | v1, v2 | 4 MB and 16 MB profiles; actual chip capacities recorded separately |
+| Open-Source-Chastity-Lockbox_LKBX | r2, r8 | Both 16 MB ESP32-S3 boards, verified R2/R8 PSRAM |
+| Open-Source-Deepthroat-Trainer_DTT | v1, v2 | 4 MB and 16 MB profiles; actual chip capacities recorded separately |
 | OSSM | 4mb, 16mb | One ESP32, selected by measured capacity |
-| radr-wireless-remote | existing staging/production aliases | Enrolled 16 MB R8 remote, application and LittleFS |
+| Open-Source-Wireless-Remote_RADR | existing staging/production aliases | Enrolled 16 MB R8 remote, application and LittleFS |
 
 OSSM retains its original development/staging/production aliases. Its restored
 Software tree comes from this repository's main firmware; staging hardware and
-assembly documentation remain separate. The public Trainer keeps BLE disabled,
-its SDK security patches, both deployed partition tables, and 16 KiB OTA reserve.
+assembly documentation remain separate. The Trainer keeps its SDK security
+patches and both deployed partition tables.
 
 OSSM's 4 MB profiles use the standard 4 MB min_spiffs layout and size optimization;
 16 MB profiles and the existing aliases retain main's custom `min_spiffs.csv`.
@@ -148,8 +148,9 @@ repository, file and commit first. Runner registration cannot fix a workflow tha
 GitHub cannot load.
 
 Keep the reviewed wrapper commit reachable through a durable remote reference.
-RADR retains its reviewed commit on `codex/reviewed-hardware-runner`; preserve
-that reference when cleaning up merged implementation branches. The caller and
+RADR retains its reviewed commit `ec0a99d` on `AJ/reviewed-hardware-runner-rename`
+(and the pre-rename `a5fd9f3` on `codex/reviewed-hardware-runner`); preserve
+those references when cleaning up merged implementation branches. The caller and
 runner group's selected-workflow entry must continue to use the reviewed full
 SHA, not the name of this branch or the current main commit. Restoring reachability
 does not authorize editing the wrapper or broadening the runner group.
