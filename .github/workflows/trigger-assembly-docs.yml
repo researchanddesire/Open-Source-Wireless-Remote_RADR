@@ -1,0 +1,42 @@
+# Documentation syncs run main to main only; staging receives docs from the hub.
+name: Notify Assembly Content Hub
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - assembly-docs/**
+      - .github/assembly-sync.json
+      - .github/workflows/trigger-assembly-docs.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: assembly-hub-notification-main
+  cancel-in-progress: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Create token scoped to the hub
+        id: token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.RAD_VERSION_CONTROL_APP_ID }}
+          private-key: ${{ secrets.RAD_VERSION_CONTROL_PRIVATE_KEY }}
+          owner: researchanddesire
+          repositories: rad-app
+      - name: Wake hub reconciliation
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ steps.token.outputs.token }}
+          script: |
+            await github.rest.repos.createDispatchEvent({
+              owner: 'researchanddesire', repo: 'rad-app',
+              event_type: 'assembly-content-changed',
+              client_payload: { repository: `${context.repo.owner}/${context.repo.repo}`, branch: 'main' }
+            });
