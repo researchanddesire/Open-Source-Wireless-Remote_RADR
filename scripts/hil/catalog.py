@@ -54,6 +54,7 @@ REPOSITORIES = {
     'researchanddesire/DT_Trainer-OSS': 'dtt',
     'researchanddesire/OSSM': 'ossm',
     'researchanddesire/radr-wireless-remote': 'radr',
+    'researchanddesire/Open-Source-Wireless-Remote_RADR': 'radr',
 }
 
 
