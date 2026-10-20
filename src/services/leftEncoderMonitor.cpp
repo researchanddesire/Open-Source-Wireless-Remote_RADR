@@ -23,7 +23,10 @@ void leftEncoderMonitorTask(void *pvParameters) {
         bool inControl = stateMachine->is("device_draw_control"_s);
         bool inMenu = stateMachine->is("device_menu"_s);
         bool inSimplePenetration = stateMachine->is("simple_penetration_control"_s);
-        return inControl || inMenu || inSimplePenetration;
+        bool inSettings = stateMachine->is("ossm_settings"_s) ||
+                          stateMachine->is("ossm_setting_edit"_s) ||
+                          stateMachine->is("ossm_settings_confirm"_s);
+        return inControl || inMenu || inSimplePenetration || inSettings;
     };
 
     while (isInDeviceStates()) {
