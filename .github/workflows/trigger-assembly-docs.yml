@@ -1,25 +1,20 @@
+# Documentation syncs run main to main only; staging receives docs from the hub.
 name: Notify Assembly Content Hub
 
 on:
   push:
-    branches: [staging, main]
+    branches: [main]
     paths:
       - assembly-docs/**
       - .github/assembly-sync.json
       - .github/workflows/trigger-assembly-docs.yml
   workflow_dispatch:
-    inputs:
-      branch:
-        description: Matching hub release track
-        type: choice
-        options: [staging, main]
-        default: staging
 
 permissions:
   contents: read
 
 concurrency:
-  group: assembly-hub-notification-${{ github.event_name == 'push' && github.ref_name || inputs.branch }}
+  group: assembly-hub-notification-main
   cancel-in-progress: false
 
 jobs:
@@ -37,15 +32,11 @@ jobs:
           repositories: rad-app
       - name: Wake hub reconciliation
         uses: actions/github-script@v7
-        env:
-          SYNC_BRANCH: ${{ github.event_name == 'push' && github.ref_name || inputs.branch }}
         with:
           github-token: ${{ steps.token.outputs.token }}
           script: |
-            const branch = process.env.SYNC_BRANCH;
-            if (!['staging', 'main'].includes(branch)) throw new Error('Invalid release track');
             await github.rest.repos.createDispatchEvent({
               owner: 'researchanddesire', repo: 'rad-app',
               event_type: 'assembly-content-changed',
-              client_payload: { repository: `${context.repo.owner}/${context.repo.repo}`, branch }
+              client_payload: { repository: `${context.repo.owner}/${context.repo.repo}`, branch: 'main' }
             });
