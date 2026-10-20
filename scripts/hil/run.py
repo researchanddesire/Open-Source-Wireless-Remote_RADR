@@ -19,6 +19,8 @@ import xml.etree.ElementTree as ET
 from bundle import validate, partition_rows
 from catalog import PRODUCTS, REPOSITORIES, policy, regions, physical_flash_allowed
 from monitor import Monitor, PREFIX
+from ossm_guard import GuardWatch
+from video import Recorder
 
 
 @contextmanager
@@ -191,7 +193,7 @@ def safe_line(line):
     return '[device log redacted'+(': '+', '.join(hits) if hits else '')+']'
 
 
-def observe(device, port_name, monitor, log):
+def observe(device, port_name, monitor, log, guard=None):
     import serial
     from esptool.reset import HardReset
     port = serial.Serial(port=None, baudrate=115200, timeout=.25)
@@ -203,6 +205,8 @@ def observe(device, port_name, monitor, log):
         pending = bytearray()
         while not monitor.passed:
             monitor.tick(time.monotonic())
+            if guard:
+                guard.check()
             pending.extend(port.read(port.in_waiting or 1))
             if len(pending) > 65536:
                 raise RuntimeError('serial line exceeded bounded framing')
@@ -216,27 +220,32 @@ def observe(device, port_name, monitor, log):
         port.close()
 
 
-def test_device(variant, device, manifest, bundle, output):
+def test_device(variant, device, manifest, bundle, output, recorder=None, guard=None):
     monitor = None
     result = dict(variant=variant, device_id=device['device_id'], status='failed')
+    event = recorder.event if recorder else (lambda *_: None)
     try:
         spec = policy(manifest['repository'], variant)
         port = find_port(device)
         with (output/(variant+'-flash.log')).open('w', encoding='utf-8') as log:
+            event(variant, 'identity check')
             probe(port, spec, device, log)
+            event(variant, 'flashing')
             flash(port, spec, device, bundle/variant, log)
         expected = dict(schema=1, product=spec['product'], variant=variant,
                         device_id=device['device_id'], flash_bytes=device['flash_bytes'],
                         build_sha=manifest['build_sha'], track='staging',
                         image_sha256=manifest['variants'][variant]['image_sha256'])
         monitor = Monitor(expected, time.monotonic())
+        event(variant, 'reset and observe')
         with (output/(variant+'-serial.log')).open('w', encoding='utf-8') as log:
-            observe(device, port, monitor, log)
+            observe(device, port, monitor, log, guard)
         result = monitor.result(time.monotonic())
     except Exception as error:
         if monitor:
             result = monitor.result(time.monotonic())
         result.update(status='failed', error=str(error))
+    event(variant, result['status'] + (': ' + result['error'] if result.get('error') else ''))
     (output/(variant+'-result.json')).write_text(json.dumps(result, indent=2)+'\n', encoding='utf-8')
     print(f'{variant}: {result["status"]} {result.get("error", "")}', flush=True)
     return result
@@ -251,6 +260,7 @@ def main():
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     results = []
+    recorder = guard = None
     try:
         manifest = validate(args.bundle, args.repository, args.build_sha, args.run_id, args.run_attempt)
         devices = load_fixture(args.fixture, args.repository)
@@ -264,12 +274,24 @@ def main():
             ports = [find_port(d) for d in devices.values()]
             if len(set(ports)) != len(ports):
                 raise RuntimeError('multiple fixtures resolved to the same port')
+            # Evidence video never decides a result; the camera map is host-only.
+            recorder = Recorder(args.fixture.with_name('cameras.json'), product, list(devices), args.output)
+            recorder.start()
+            if product == 'ossm':
+                # No OSSM image is written unless the RS-485 guard protects the motor.
+                guard = GuardWatch(args.fixture.with_name('rs485-guard')/'status.json', args.output)
+                guard.require()
             with ThreadPoolExecutor(max_workers=len(devices)) as pool:
-                futures = [pool.submit(test_device, v, d, manifest, args.bundle, args.output)
+                futures = [pool.submit(test_device, v, d, manifest, args.bundle, args.output, recorder, guard)
                            for v, d in devices.items()]
                 results = [f.result() for f in futures]
     except Exception as error:
         results = [dict(variant='preflight', status='failed', error=str(error))]
+    finally:
+        if guard:
+            guard.close()
+        if recorder:
+            recorder.stop()
     report = dict(schema=2, repository=args.repository, build_sha=args.build_sha,
                   run_id=args.run_id, run_attempt=args.run_attempt,
                   completed_at=datetime.now(timezone.utc).isoformat(), devices=results)

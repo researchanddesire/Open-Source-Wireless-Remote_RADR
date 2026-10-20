@@ -2,13 +2,52 @@ name: PR firmware validation
 on:
   pull_request:
     branches: [staging, main]
-    types: [opened, synchronize, reopened, ready_for_review, edited]
+    # No `edited`: a title or body edit must not start a second rig run.
+    types: [opened, synchronize, reopened, ready_for_review]
 permissions:
   contents: read
 env:
   RELEASE_BUILD_SHA: ${{ github.sha }}
+  # The firmware directory. Keep in sync with pr-target-policy.yml and the
+  # publish_firmware.yml push paths.
+  FIRMWARE_PATHS: '^(src|include|lib|data|config|test|ButtplugIO)/|^(platformio\.ini|firmware_build_metadata\.py|serial_identity_build\.py|scripts/[^/]*\.sh)$'
+  FIRMWARE_IGNORE: ''
+  # Validation tooling also runs the rig so its own changes are exercised.
+  VALIDATION_PATHS: '^(scripts/hil/|\.github/workflows/(pr-firmware|hardware-run)\.yml$|\.github/scripts/hil_evidence\.py$)'
 jobs:
+  changes:
+    name: Firmware changes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      firmware: ${{ steps.detect.outputs.firmware }}
+    steps:
+      - name: Detect firmware or validation changes
+        id: detect
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        shell: bash
+        run: |
+          files="$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files" \
+            --jq '.[] | .filename, (.previous_filename // empty)')"
+          firmware="$(grep -E "$FIRMWARE_PATHS" <<< "$files" || true)"
+          if [[ -n "$FIRMWARE_IGNORE" && -n "$firmware" ]]; then
+            firmware="$(grep -Ev "$FIRMWARE_IGNORE" <<< "$firmware" || true)"
+          fi
+          validation="$(grep -E "$VALIDATION_PATHS" <<< "$files" || true)"
+          if [[ -n "$firmware$validation" ]]; then
+            printf '%s\n' "$firmware" "$validation" | sed '/^$/d'
+            echo "firmware=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No firmware changes: build and hardware validation are not required."
+            echo "firmware=false" >> "$GITHUB_OUTPUT"
+          fi
   development_screens:
+    needs: changes
+    if: needs.changes.outputs.firmware == 'true'
     name: Development screen ${{ matrix.environment }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -35,6 +74,8 @@ jobs:
           PIO_ENV: ${{ matrix.environment }}
         run: python scripts/check_screen_build.py --build-dir ".pio/build/$PIO_ENV" --expect enabled
   harness_tests:
+    needs: changes
+    if: needs.changes.outputs.firmware == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -44,6 +85,8 @@ jobs:
       - run: python -m pip install -r scripts/hil/requirements.txt
       - run: python -m unittest discover -s scripts/hil -p 'test_*.py'
   firmware:
+    needs: changes
+    if: needs.changes.outputs.firmware == 'true'
     name: Firmware ${{ matrix.environment }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -121,35 +164,88 @@ jobs:
   build_required:
     name: Build validation
     if: always()
-    needs: [harness_tests, firmware, prepare_hardware, development_screens]
+    needs: [changes, harness_tests, firmware, prepare_hardware, development_screens]
     runs-on: ubuntu-latest
     steps:
-      - name: Require every build and manifest validation
+      - name: Require every build and manifest validation for firmware changes
         env:
+          FIRMWARE: ${{ needs.changes.outputs.firmware }}
           RESULTS: ${{ toJSON(needs) }}
         run: |
           python - <<'PY'
           import json, os
-          failed = [name for name, job in json.loads(os.environ['RESULTS']).items() if job['result'] != 'success']
+          results = json.loads(os.environ['RESULTS'])
+          if results['changes']['result'] != 'success':
+              raise SystemExit('Could not determine whether firmware changed')
+          if os.environ['FIRMWARE'] != 'true':
+              print('No firmware changes; build validation is not required.')
+              raise SystemExit(0)
+          failed = [name for name, job in results.items() if job['result'] != 'success']
           if failed:
               raise SystemExit('Required jobs did not pass: ' + ', '.join(failed))
           PY
   hardware:
-    needs: build_required
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    needs: [changes, build_required]
+    if: >-
+      needs.changes.outputs.firmware == 'true' &&
+      github.event.pull_request.head.repo.full_name == github.repository
     # Use the exact reviewed wrapper commit allowed by the runner group.
     # Runner-group access is restricted to this full workflow path and ref.
     uses: researchanddesire/Open-Source-Wireless-Remote_RADR/.github/workflows/hardware-run.yml@ec0a99d8fc9a8b7e1c9a8c84d48ec619174ad0b3
   hardware_required:
     name: Hardware validation
     if: always()
-    needs: [build_required, hardware]
+    needs: [changes, build_required, hardware]
     runs-on: ubuntu-latest
     steps:
-      - name: Reject skipped, missing, cancelled, or failed hardware validation
+      - name: Reject skipped, missing, cancelled, or failed hardware validation of firmware changes
         env:
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          FIRMWARE: ${{ needs.changes.outputs.firmware }}
           BUILD_RESULT: ${{ needs.build_required.result }}
           HARDWARE_RESULT: ${{ needs.hardware.result }}
         run: |
+          test "$CHANGES_RESULT" = success
+          if [ "$FIRMWARE" != true ]; then
+            echo "No firmware changes; hardware validation is not required."
+            exit 0
+          fi
           test "$BUILD_RESULT" = success
           test "$HARDWARE_RESULT" = success
+  hardware_evidence:
+    name: Hardware evidence
+    needs: [changes, hardware]
+    # Posts on pass and fail. Fork PRs never reach the rig, so they have no evidence.
+    if: >-
+      !cancelled() && needs.changes.outputs.firmware == 'true' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      needs.hardware.result != 'skipped'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        continue-on-error: true
+        with:
+          name: hardware-evidence-${{ github.sha }}-${{ github.run_attempt }}
+          path: hardware-evidence
+      - name: Install ffmpeg
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - name: Comment with the rig video and result
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_ID: acjajruwevyyatztbkdf
+          HARDWARE_RESULT: ${{ needs.hardware.result }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: python .github/scripts/hil_evidence.py --evidence hardware-evidence --pr "$PR_NUMBER" --hardware-result "$HARDWARE_RESULT"

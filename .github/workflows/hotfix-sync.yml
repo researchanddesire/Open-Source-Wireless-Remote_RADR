@@ -8,35 +8,23 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: main-to-staging-sync
+  cancel-in-progress: false
+
 jobs:
-  open-sync-pr:
-    if: github.event.pull_request.merged == true
+  sync:
+    name: Merge main back into staging
+    # Fix branches and non-firmware changes land on main directly. Carry every
+    # such merge back so staging never falls behind main; promotions need nothing.
+    if: >-
+      github.event.pull_request.merged == true &&
+      !(github.event.pull_request.head.repo.full_name == github.repository &&
+        github.event.pull_request.head.ref == 'staging')
     runs-on: ubuntu-latest
     steps:
-      - name: Identify a direct hotfix
-        id: policy
-        env:
-          BASE_REPOSITORY: ${{ github.repository }}
-          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
-          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
-        shell: bash
-        run: |
-          if [[ "$HEAD_REPOSITORY" == "$BASE_REPOSITORY" && "$HEAD_BRANCH" == "staging" ]]; then
-            echo "sync=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          shopt -s nocasematch
-          if [[ "$PR_TITLE" =~ ^hotfix([[:space:][:punct:]]|$) ]]; then
-            echo "sync=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "sync=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Generate RAD Version Control token
-        if: steps.policy.outputs.sync == 'true'
-        id: app-token
+      - name: Generate version-control token
+        id: version_token
         uses: actions/create-github-app-token@v2
         with:
           app-id: ${{ vars.RAD_VERSION_CONTROL_APP_ID }}
@@ -44,27 +32,53 @@ jobs:
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
 
-      - name: Open or update main-to-staging synchronization
-        if: steps.policy.outputs.sync == 'true'
+      # Trusted refs only: this never checks out the merged PR's head.
+      - uses: actions/checkout@v4
+        with:
+          ref: staging
+          fetch-depth: 0
+          token: ${{ steps.version_token.outputs.token }}
+
+      - name: Merge main into staging, or open a sync PR for real conflicts
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ steps.version_token.outputs.token }}
+          # main wins documentation; staging keeps its own allocated firmware version.
+          DOCS_PATHS: '^(assembly-docs|docs|developer-docs)/'
+          VERSION_FILES: '^(src/constants/Version\.h|version\.json)$'
         shell: bash
         run: |
-          ahead_by="$(gh api "repos/${GITHUB_REPOSITORY}/compare/staging...main" --jq '.ahead_by')"
-          if [[ "$ahead_by" == "0" ]]; then
+          git config user.name "rad-version-control[bot]"
+          git config user.email "rad-version-control[bot]@users.noreply.github.com"
+          git fetch origin main
+          if git merge-base --is-ancestor origin/main HEAD; then
             echo "staging already contains main."
             exit 0
           fi
-
-          existing="$(gh pr list --repo "$GITHUB_REPOSITORY" --base staging --head main --state open --json url --jq '.[0].url')"
-          if [[ -n "$existing" ]]; then
-            echo "Synchronization PR already open: $existing"
-            exit 0
+          if ! git merge --no-ff --no-edit -m "Merge main into staging" origin/main; then
+            unresolved=""
+            while IFS= read -r file; do
+              if [[ "$file" =~ $DOCS_PATHS ]]; then
+                if git checkout --theirs -- "$file" 2>/dev/null; then git add -- "$file"; else git rm -q -- "$file"; fi
+              elif [[ "$file" =~ $VERSION_FILES ]]; then
+                git checkout --ours -- "$file" && git add -- "$file"
+              else
+                unresolved+="$file"$'\n'
+              fi
+            done < <(git diff --name-only --diff-filter=U)
+            if [[ -n "$unresolved" ]]; then
+              git merge --abort
+              echo "These conflicts need a person:"
+              echo "$unresolved"
+              existing="$(gh pr list --repo "$GITHUB_REPOSITORY" --base staging --head main --state open --json url --jq '.[0].url')"
+              if [[ -n "$existing" ]]; then
+                echo "Synchronization PR already open: $existing"
+              else
+                gh pr create --repo "$GITHUB_REPOSITORY" --base staging --head main \
+                  --title "Sync main back to staging" \
+                  --body "main could not merge into staging automatically. Resolve the conflicts (main wins documentation; staging keeps its firmware version), then merge with a merge commit; do not squash or rebase."
+              fi
+              exit 0
+            fi
+            git commit --no-edit
           fi
-
-          gh pr create \
-            --repo "$GITHUB_REPOSITORY" \
-            --base staging \
-            --head main \
-            --title "Sync main hotfixes back to staging" \
-            --body "Carries production hotfix commits back into staging. Merge this PR with a merge commit after all required checks pass; do not squash or rebase it."
+          git push origin HEAD:staging

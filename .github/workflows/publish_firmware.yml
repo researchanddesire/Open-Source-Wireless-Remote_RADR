@@ -1,9 +1,15 @@
 name: Publish immutable firmware candidate
 
 on:
+  # Manual runs republish the current branch head after a failed candidate.
+  workflow_dispatch:
   push:
     branches: [main, staging]
     paths:
+      # The firmware directory only: a change here allocates the next version and
+      # publishes a signed candidate. Keep in sync with FIRMWARE_PATHS in
+      # pr-firmware.yml and pr-target-policy.yml. Release tooling changes are
+      # exercised by PR checks and republished manually.
       - "src/**"
       - "include/**"
       - "lib/**"
@@ -15,18 +21,6 @@ on:
       - "firmware_build_metadata.py"
       - "serial_identity_build.py"
       - "scripts/*.sh"
-      - "scripts/release_version.py"
-      - "scripts/test_release_version.py"
-      - ".github/scripts/publish_immutable_firmware.py"
-      - ".github/scripts/test_publish_immutable_firmware.py"
-      - ".github/scripts/build_web_installer.py"
-      - ".github/scripts/test_build_web_installer.py"
-      - ".github/scripts/release_workflow.py"
-      - ".github/scripts/test_release_workflow.py"
-      - ".github/workflows/finalize_release.yml"
-      - ".github/workflows/publish_firmware.yml"
-      - ".github/workflows/release_alpha.yml"
-      - ".github/workflows/release_production.yml"
 
 permissions:
   contents: write
