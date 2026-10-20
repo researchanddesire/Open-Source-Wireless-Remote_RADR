@@ -2,34 +2,60 @@ name: PR target policy
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, staging]
     types: [opened, edited, reopened, synchronize, ready_for_review]
 
-permissions: {}
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  # The firmware directory. Keep in sync with pr-firmware.yml and the
+  # publish_firmware.yml push paths.
+  FIRMWARE_PATHS: '^(src|include|lib|data|config|test|ButtplugIO)/|^(platformio\.ini|firmware_build_metadata\.py|serial_identity_build\.py|scripts/[^/]*\.sh)$'
+  FIRMWARE_IGNORE: ''
 
 jobs:
   validate-target:
     name: PR target policy
     runs-on: ubuntu-latest
     steps:
-      - name: Validate source branch or hotfix title
+      - name: Firmware reaches main through staging or a fix branch
         env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_REF: ${{ github.base_ref }}
           BASE_REPOSITORY: ${{ github.repository }}
           HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
           HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
-          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         shell: bash
         run: |
-          if [[ "$HEAD_REPOSITORY" == "$BASE_REPOSITORY" && "$HEAD_BRANCH" == "staging" ]]; then
+          if [[ "$BASE_REF" != main ]]; then
+            echo "Any change may enter $BASE_REF."
+            exit 0
+          fi
+          if [[ "$HEAD_REPOSITORY" == "$BASE_REPOSITORY" && "$HEAD_BRANCH" == staging ]]; then
             echo "Same-repository staging promotion accepted."
             exit 0
           fi
-
-          shopt -s nocasematch
-          if [[ "$PR_TITLE" =~ ^hotfix([[:space:][:punct:]]|$) ]]; then
-            echo "Hotfix title accepted."
+          if [[ "$HEAD_BRANCH" =~ (^|/)fix/.+ ]]; then
+            echo "Fix branch $HEAD_BRANCH may enter main directly."
             exit 0
           fi
 
-          echo "::error::PRs into main must come from this repository's staging branch or begin with the standalone word 'hotfix'. Retarget feature work to staging, or rename a legitimate hotfix."
+          # Renames count on both sides so firmware cannot leave the directory unnoticed.
+          files="$(gh api --paginate "repos/$BASE_REPOSITORY/pulls/$PR_NUMBER/files" \
+            --jq '.[] | .filename, (.previous_filename // empty)')"
+          firmware="$(grep -E "$FIRMWARE_PATHS" <<< "$files" || true)"
+          if [[ -n "$FIRMWARE_IGNORE" && -n "$firmware" ]]; then
+            firmware="$(grep -Ev "$FIRMWARE_IGNORE" <<< "$firmware" || true)"
+          fi
+          if [[ -z "$firmware" ]]; then
+            echo "No firmware changes; this PR may enter main directly."
+            exit 0
+          fi
+
+          echo "Firmware changes:"
+          echo "$firmware"
+          echo "::error::Firmware changes enter staging first. Retarget this PR to staging, or open it from a fix/<issue> branch for a production fix."
           exit 1
