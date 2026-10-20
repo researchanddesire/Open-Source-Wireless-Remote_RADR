@@ -1,4 +1,18 @@
-# AGENTS.md
+# AGENTS.md - RADR Wireless Remote
+
+Guidance for agents working in this product repository.
+
+## Repository Layout
+
+- The PlatformIO firmware project lives at the repository root: `platformio.ini`,
+  `src/`, `include/`, `lib/`, `data/`, `test/`, and `config/` (boards and
+  `partition.csv`). Run `pio` commands from the root.
+- `hardware/` holds `Print Files/`, `Photos/`, `pcb/`, `cad/`, `cables/`, and `bom.csv`.
+- `developer-docs/` is the MkDocs developer site; `assembly-docs/` is the hub
+  mirror described below.
+- No GitHub Pages. Firmware releases publish only to Supabase: immutable
+  releases, then the `master`, `production`, and `alpha` aliases.
+
 
 ## Technician Build PC
 
@@ -17,6 +31,12 @@
 - Use matching branch names and linked pull requests for changes spanning RAD App or another firmware repository.
 - Staging firmware reports the `staging` track and checks `https://staging.researchanddesire.com`. Main firmware reports `main` and checks `https://dashboard.researchanddesire.com`.
 - Firmware is update-eligible only after its immutable Supabase artifacts and all required validation records verify. Missing hardware runners leave a release in `validating`; never bypass a gate.
+
+## Memory Rules (RAD-2158)
+
+- The RADR never opens a TLS socket while NimBLE is initialised. NimBLE plus the RAD BLE service cost ~100 KB of internal RAM at boot and a TLS handshake needs ~50 KB in one block; the largest free block with BLE up is ~24 KB. Network jobs about the OSSM (pairing, update) run on the OSSM over a BLE trigger; the RADR's own OTA tears BLE down first.
+- Every task on an internal-RAM stack is created through `createInternalTask` (or `startTask`) so an out-of-memory condition logs the heap state and shows on screen. Never call `xTaskCreate*` bare and drop the result.
+- Boot logs `[MEM] boot after BLE init: ... largest=...` at error level. A release whose largest block is below `RADR_MIN_LARGEST_BLOCK` (24 KB; measured 31.7 KB at boot on 2026-09-08) on the desk unit must not be promoted; record the number in the release PR.
 
 ## Development Safety
 
@@ -38,11 +58,37 @@
 ## Development display capture
 
 - Development builds expose the read-only USB `screen` command; staging and production omit it.
-- Follow docs/development-screen-capture.md; use the display mutex for snapshots and keep serial transmission outside it.
+- Follow developer-docs/docs/development/screen-capture.md; use the display mutex for snapshots and keep serial transmission outside it.
 - Preserve the capture mirror when adding TFT bulk drawing paths. Keep capture files outside Git.
 
 ## Serial identity
 
-- All firmware tracks expose the read-only boot/`info` identity described in docs/serial-identity.md.
+- All firmware tracks expose the read-only boot/`info` identity described in developer-docs/docs/development/serial-identity.md.
 - Keep one serial input reader; development screen commands register with it.
 - Report target memory and measured memory separately; a label never authorizes flashing or motion.
+
+## Ohai Assembly Docs Contract
+
+- `assembly-docs/` on `main` is the authoritative source for the RADR pages on ohai.researchanddesire.com. The rad-app hub (`scripts/assembly-sync/config.json` in researchanddesire/rad-app) imports it main to main only and merges the import automatically. Staging is never synced; for documentation, `main` always wins.
+- `.github/workflows/trigger-assembly-docs.yml` notifies the hub on pushes to `main` that touch `assembly-docs/**`, and the hub also polls hourly. There is no checkpoint file.
+- Every change to `assembly-docs/` on `main`, including deletions, reaches the live site within minutes without review. Do not delete or move written documentation without AJ's approval, and do not rewrite `main` history.
+- Page files are `.mdx` without a language suffix; the hub publishes them as `docs/radr/<page>.en.mdx`. Translations live in researchanddesire/assembly-docs.
+- Keep `assembly-docs/_bom/source.json` and `bom.json` consistent with `_bom/bom.csv`: `bom.json` is the source fields plus the parsed columns and rows. The hub rejects stale or mismatched BOM data.
+
+## BOM And Cable Rules
+
+- `hardware/bom.csv` is the product-level BOM source and is human-owned.
+- Use the fixed RAD 12-column BOM header and only canonical category codes.
+- Use the en dash `–` for empty values; do not leave blank cells.
+- Product BOMs list cable harnesses as top-level assemblies.
+- Detailed cable BOMs belong to Wireviz output. Link generated `.bom.tsv`
+  artifacts from assembly docs instead of copying child cable BOM rows into
+  `hardware/bom.csv`.
+- Do not commit generated assembly-site output, rendered BOM HTML, `.DS_Store`,
+  `cable-export/`, or generated cable render outputs.
+
+## Workflow
+
+- Do not auto-commit changes unless explicitly asked.
+- Keep changes reviewable and scoped to the request.
+- Prefer existing project patterns over new abstractions.

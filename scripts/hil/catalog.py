@@ -44,16 +44,14 @@ PRODUCTS = {
     'ossm': {'root': 'Software', 'variants': {
         '4mb': lane('esp32', 4, OSSM_4MB),
         '16mb': lane('esp32', 16, OSSM_16MB)}},
-    'radr': {'root': 'Software', 'variants': {
+    'radr': {'root': '.', 'variants': {
         'r8': lane('esp32s3', 16, S3_PARTITIONS, 'r8', filesystem=True)}},
 }
 REPOSITORIES = {
-    'researchanddesire/Lockbox': 'lockbox',
-    'researchanddesire/Lockbox-OSS': 'lockbox',
-    'researchanddesire/DT_Trainer': 'dtt',
-    'researchanddesire/DT_Trainer-OSS': 'dtt',
+    'researchanddesire/Open-Source-Chastity-Lockbox_LKBX': 'lockbox',
+    'researchanddesire/Open-Source-Deepthroat-Trainer_DTT': 'dtt',
     'researchanddesire/OSSM': 'ossm',
-    'researchanddesire/radr-wireless-remote': 'radr',
+    'researchanddesire/Open-Source-Wireless-Remote_RADR': 'radr',
 }
 
 

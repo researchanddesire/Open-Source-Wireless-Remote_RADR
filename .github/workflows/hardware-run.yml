@@ -12,7 +12,7 @@ jobs:
         env:
           ALLOWED: >-
             ${{ github.event_name == 'pull_request' &&
-                github.repository == 'researchanddesire/radr-wireless-remote' &&
+                github.repository == 'researchanddesire/Open-Source-Wireless-Remote_RADR' &&
                 github.event.pull_request.head.repo.full_name == github.repository &&
                 (github.base_ref == 'staging' || github.base_ref == 'main') }}
         run: test "$ALLOWED" = true

@@ -55,21 +55,6 @@ class BundleTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'partition layout differs'):
             validate_partitions(data, policy('researchanddesire/OSSM', '16mb'))
 
-    def test_public_trainer_keeps_its_export_reserve(self):
-        repo = 'researchanddesire/DT_Trainer-OSS'
-        with tempfile.TemporaryDirectory() as directory:
-            bundle = make_bundle(Path(directory), repo)
-            manifest = json.loads((bundle/'manifest.json').read_text())
-            body = image(policy(repo, 'v1'))[:-32].ljust(0x140000-8192-32, b'\0')
-            data = body+hashlib.sha256(body).digest()
-            (bundle/'v1/firmware.bin').write_bytes(data)
-            entry = manifest['variants']['v1']
-            entry['components']['firmware.bin'].update(size=len(data), sha256=hashlib.sha256(data).hexdigest())
-            entry['image_sha256'] = data[-32:].hex()
-            (bundle/'manifest.json').write_text(json.dumps(manifest))
-            with self.assertRaisesRegex(ValueError, '16 KiB OTA reserve'):
-                validate(bundle, repo, SHA, '42', '1')
-
     def test_every_product_variant_packages_and_validates(self):
         for repo in REPOSITORIES:
             with self.subTest(repo=repo), tempfile.TemporaryDirectory() as directory:
@@ -78,16 +63,16 @@ class BundleTests(unittest.TestCase):
                 self.assertEqual(set(result['variants']), set(PRODUCTS[REPOSITORIES[repo]]['variants']))
 
     def test_rejects_wrong_repository_sha_run_and_attempt(self):
-        repo = 'researchanddesire/DT_Trainer'
+        repo = 'researchanddesire/Open-Source-Deepthroat-Trainer_DTT'
         with tempfile.TemporaryDirectory() as directory:
             bundle = make_bundle(Path(directory), repo)
             for identity in [(repo, 'b'*40, '42', '1'), (repo, SHA, '43', '1'),
-                             (repo, SHA, '42', '2'), ('researchanddesire/DT_Trainer-OSS', SHA, '42', '1')]:
+                             (repo, SHA, '42', '2'), ('researchanddesire/Open-Source-Chastity-Lockbox_LKBX', SHA, '42', '1')]:
                 with self.subTest(identity=identity), self.assertRaises(ValueError):
                     validate(bundle, *identity)
 
     def test_corruption_wrong_flash_chip_offset_or_missing_variant_fails(self):
-        repo = 'researchanddesire/DT_Trainer'
+        repo = 'researchanddesire/Open-Source-Deepthroat-Trainer_DTT'
         for mutation in ('corrupt', 'flash', 'chip', 'offset', 'missing', 'overflow', 'partition'):
             with self.subTest(mutation=mutation), tempfile.TemporaryDirectory() as directory:
                 bundle = make_bundle(Path(directory), repo)
@@ -167,7 +152,7 @@ class MonitorTests(unittest.TestCase):
 
 class HostTests(unittest.TestCase):
     def test_verified_connection_is_reused_without_loading_a_second_stub(self):
-        spec = policy('researchanddesire/DT_Trainer', 'v1')
+        spec = policy('researchanddesire/Open-Source-Deepthroat-Trainer_DTT', 'v1')
         connected = MagicMock()
         connected.run_stub.return_value = connected
         connected.CHIP_NAME = 'ESP32'
@@ -186,7 +171,7 @@ class HostTests(unittest.TestCase):
             self.assertEqual(connected.WRITE_FLASH_ATTEMPTS, 1)
 
     def test_nvs_change_after_write_fails_validation(self):
-        spec = policy('researchanddesire/DT_Trainer', 'v1')
+        spec = policy('researchanddesire/Open-Source-Deepthroat-Trainer_DTT', 'v1')
         connected = MagicMock()
         connected.run_stub.return_value = connected
         connected.read_flash.side_effect = [b'preserved identity', b'changed identity']
@@ -197,13 +182,13 @@ class HostTests(unittest.TestCase):
         connected._port.close.assert_called_once()
 
     def test_larger_trainer_requires_explicit_enrollment_exception(self):
-        spec = policy('researchanddesire/DT_Trainer', 'v1')
+        spec = policy('researchanddesire/Open-Source-Deepthroat-Trainer_DTT', 'v1')
         self.assertFalse(physical_flash_allowed(spec, 16777216))
         self.assertTrue(physical_flash_allowed(spec, 16777216, True))
         self.assertFalse(physical_flash_allowed(spec, 8388608, True))
         self.assertFalse(physical_flash_allowed(policy('researchanddesire/OSSM', '4mb'), 16777216, True))
     def test_swapped_device_cannot_reach_write_flash(self):
-        spec = policy('researchanddesire/DT_Trainer', 'v1')
+        spec = policy('researchanddesire/Open-Source-Deepthroat-Trainer_DTT', 'v1')
         connected = MagicMock()
         connected.run_stub.return_value = connected
         connected.CHIP_NAME = 'ESP32'
@@ -226,29 +211,29 @@ class HostTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             fixture = Path(directory)/'fixture.json'
             fixture.write_text('{"products": {"dtt": {}}}')
-            with self.assertRaises(ValueError): load_fixture(fixture, 'researchanddesire/DT_Trainer')
+            with self.assertRaises(ValueError): load_fixture(fixture, 'researchanddesire/Open-Source-Deepthroat-Trainer_DTT')
 
     def test_wrong_capacity_or_duplicate_identity_fails_enrollment(self):
         with tempfile.TemporaryDirectory() as directory:
             fixture = Path(directory)/'fixture.json'
             devices = {}
             for n, variant in enumerate(('v1', 'v2')):
-                spec = policy('researchanddesire/DT_Trainer', variant)
+                spec = policy('researchanddesire/Open-Source-Deepthroat-Trainer_DTT', variant)
                 devices[variant] = dict(product='dtt', chip='esp32', flash_bytes=spec['flash_bytes'],
                                         psram=None, enrolled=True, device_id=f'AABBCCDDEE{n:02X}',
                                         usb_vid=0x10c4, usb_pid=0xea60, usb_location=f'usb-{n}')
             fixture.write_text(json.dumps(dict(schema=1, products=dict(dtt=devices))))
-            self.assertEqual(len(load_fixture(fixture, 'researchanddesire/DT_Trainer')), 2)
+            self.assertEqual(len(load_fixture(fixture, 'researchanddesire/Open-Source-Deepthroat-Trainer_DTT')), 2)
             devices['v1']['flash_bytes'] = 16777216
             fixture.write_text(json.dumps(dict(schema=1, products=dict(dtt=devices))))
-            with self.assertRaises(ValueError): load_fixture(fixture, 'researchanddesire/DT_Trainer')
+            with self.assertRaises(ValueError): load_fixture(fixture, 'researchanddesire/Open-Source-Deepthroat-Trainer_DTT')
             devices['v1']['flash_bytes'] = 4194304
             devices['v2']['device_id'] = devices['v1']['device_id']
             fixture.write_text(json.dumps(dict(schema=1, products=dict(dtt=devices))))
-            with self.assertRaises(ValueError): load_fixture(fixture, 'researchanddesire/DT_Trainer')
+            with self.assertRaises(ValueError): load_fixture(fixture, 'researchanddesire/Open-Source-Deepthroat-Trainer_DTT')
 
     def test_flash_interruption_or_serial_failure_is_not_retried(self):
-        repo = 'researchanddesire/DT_Trainer'
+        repo = 'researchanddesire/Open-Source-Deepthroat-Trainer_DTT'
         for stage in ('probe', 'flash', 'observe'):
             with self.subTest(stage=stage), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory)
@@ -265,7 +250,7 @@ class HostTests(unittest.TestCase):
                     self.assertTrue((root/'v1-result.json').exists())
 
     def test_missing_device_prevents_all_writes_and_produces_junit(self):
-        repo = 'researchanddesire/DT_Trainer'
+        repo = 'researchanddesire/Open-Source-Deepthroat-Trainer_DTT'
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             bundle = make_bundle(root, repo)

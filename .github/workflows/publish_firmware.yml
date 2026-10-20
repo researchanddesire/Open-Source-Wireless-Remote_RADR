@@ -4,7 +4,17 @@ on:
   push:
     branches: [main, staging]
     paths:
-      - "Software/**"
+      - "src/**"
+      - "include/**"
+      - "lib/**"
+      - "data/**"
+      - "config/**"
+      - "test/**"
+      - "ButtplugIO/**"
+      - "platformio.ini"
+      - "firmware_build_metadata.py"
+      - "serial_identity_build.py"
+      - "scripts/*.sh"
       - "scripts/release_version.py"
       - "scripts/test_release_version.py"
       - ".github/scripts/publish_immutable_firmware.py"
@@ -100,7 +110,7 @@ jobs:
           PR_TITLE: ${{ steps.pull_request.outputs.title }}
         run: |
           set -euo pipefail
-          SOURCE_VERSION="$(python scripts/release_version.py read --header Software/src/constants/Version.h)"
+          SOURCE_VERSION="$(python scripts/release_version.py read --header src/constants/Version.h)"
           BUMP_TYPE="$(python scripts/release_version.py bump-type --title "$PR_TITLE")"
           RESPONSE="$(curl --fail --silent --show-error \
             --retry 5 \
@@ -117,18 +127,18 @@ jobs:
             "https://dashboard.researchanddesire.com/api/internal/firmware/v1/versions/next")"
           NEXT_VERSION="$(jq -er '.nextVersion' <<< "$RESPONSE")"
           python scripts/release_version.py write \
-            --header Software/src/constants/Version.h \
+            --header src/constants/Version.h \
             --version "$NEXT_VERSION" \
             --version-json version.json
-          test "$(python scripts/release_version.py read --header Software/src/constants/Version.h)" = "$NEXT_VERSION"
+          test "$(python scripts/release_version.py read --header src/constants/Version.h)" = "$NEXT_VERSION"
           test "$(jq -r '[.major, .minor, .patch] | map(tostring) | join(".")' version.json)" = "$NEXT_VERSION"
-          UNEXPECTED="$(git diff --name-only | grep -Ev '^(Software/src/constants/Version\.h|version\.json)$' || true)"
+          UNEXPECTED="$(git diff --name-only | grep -Ev '^(src/constants/Version\.h|version\.json)$' || true)"
           if [[ -n "$UNEXPECTED" ]]; then
             echo "Unexpected versioning changes:"
             echo "$UNEXPECTED"
             exit 1
           fi
-          git add Software/src/constants/Version.h version.json
+          git add src/constants/Version.h version.json
           if git diff --cached --quiet; then
             echo "Version allocation did not change the canonical files"
             exit 1
@@ -157,14 +167,12 @@ jobs:
         run: python scripts/test_release_version.py
 
       - name: Run native unit tests
-        working-directory: Software
         run: pio test -e test_native
 
       - name: Select track build
         run: python .github/scripts/release_workflow.py configure --branch "$GITHUB_REF_NAME"
 
       - name: Build application and filesystem
-        working-directory: Software
         run: |
           pio run -e "$PIO_ENV"
           pio run -e "$PIO_ENV" --target buildfs
@@ -176,11 +184,11 @@ jobs:
         run: |
           python .github/scripts/build_web_installer.py \
             --profile esp32s3-16mb \
-            --build-dir "Software/.pio/build/$PIO_ENV" \
-            --filesystem "Software/.pio/build/$PIO_ENV/littlefs.bin" \
-            --partition-table Software/partition.csv \
+            --build-dir ".pio/build/$PIO_ENV" \
+            --filesystem ".pio/build/$PIO_ENV/littlefs.bin" \
+            --partition-table config/partition.csv \
             --filesystem-partition spiffs \
-            --output "Software/.pio/build/$PIO_ENV/web-installer.bin"
+            --output ".pio/build/$PIO_ENV/web-installer.bin"
 
       - name: Publish validating release
         id: publish
@@ -189,12 +197,12 @@ jobs:
             --device-type radr \
             --track "$TRACK" \
             --build-sha "$RELEASE_BUILD_SHA" \
-            --version-file Software/src/constants/Version.h \
-            --artifact "filesystem:Software/.pio/build/$PIO_ENV/littlefs.bin:1:true" \
-            --artifact "application:Software/.pio/build/$PIO_ENV/firmware.bin:2:true" \
-            --artifact "bootloader:Software/.pio/build/$PIO_ENV/bootloader.bin:3:false" \
-            --artifact "partitions:Software/.pio/build/$PIO_ENV/partitions.bin:4:false" \
-            --artifact "web-installer:Software/.pio/build/$PIO_ENV/web-installer.bin:5:false"
+            --version-file src/constants/Version.h \
+            --artifact "filesystem:.pio/build/$PIO_ENV/littlefs.bin:1:true" \
+            --artifact "application:.pio/build/$PIO_ENV/firmware.bin:2:true" \
+            --artifact "bootloader:.pio/build/$PIO_ENV/bootloader.bin:3:false" \
+            --artifact "partitions:.pio/build/$PIO_ENV/partitions.bin:4:false" \
+            --artifact "web-installer:.pio/build/$PIO_ENV/web-installer.bin:5:false"
 
       - name: Candidate summary
         run: |

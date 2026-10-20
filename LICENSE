@@ -1,0 +1,16 @@
+# Research and Desire — RADR License and Copyright Notices
+
+RADR firmware and hardware designs are (c) Research and Desire.
+
+All paths in this repository are available under **CERN Open Hardware Licence Strong 2.0** (CERN-OHL-S v2).
+
+Full license text: [`LICENCE`](LICENCE) and [`LICENSES/CERN-OHL-S-2.0.txt`](LICENSES/CERN-OHL-S-2.0.txt).
+
+## Path map
+
+1. Hardware at `./hardware/` — CERN-OHL-S v2
+2. Firmware at the repository root — CERN-OHL-S v2
+3. Developer documentation at `./developer-docs/` — CERN-OHL-S v2
+4. CI at `./.github/workflows` — CERN-OHL-S v2
+
+Trademarks **Research and Desire** and **RADR** remain with Research and Desire.
