@@ -1,8 +1,12 @@
 # PR firmware and shared bench validation
 
-Every pull request into `staging` or `main`, including documentation-only edits,
-builds the GitHub PR merge commit. `RELEASE_BUILD_SHA` is `github.sha`, never the
-PR head SHA. Production profiles compile; only staging artifacts reach fixtures.
+A pull request into `staging` or `main` that changes the firmware directory, or
+this validation tooling, builds the GitHub PR merge commit and runs it on the
+shared Test Rig. `RELEASE_BUILD_SHA` is `github.sha`, never the PR head SHA.
+Production profiles compile; only staging artifacts reach fixtures. Other pull
+requests skip the build and the rig, and `Build validation` and `Hardware
+validation` pass without work. Each repository's `FIRMWARE_PATHS` in
+`pr-firmware.yml` and `pr-target-policy.yml` defines its firmware directory.
 
 | Repositories | Staging and production suffixes | Physical coverage |
 | --- | --- | --- |
@@ -102,6 +106,48 @@ credentials and stays off uploaded logs. Download/setup failure also produces a
 failing JUnit report. Current-run evidence replaces Trainer `test/report.json`
 freshness; do not commit generated reports.
 
+### Video evidence and the PR comment
+
+The harness records the camera that sees the product for the whole run: identity
+check, flashing, reset and observation. Each device is cropped and rotated from
+that stream into `results/video/<variant>.mp4` with an elapsed-time clock, next to
+`manifest.json` (camera, views and a timeline of harness events). The PR job
+`Hardware evidence` turns every recording into an inline GIF and a web MP4,
+stores them in the private `hil-evidence` bucket of Supabase project
+`acjajruwevyyatztbkdf` (through `SUPABASE_ACCESS_TOKEN`), and comments on the
+PR with 1-year signed links, on pass and fail. Video never changes a result; a
+missing camera is reported in the comment.
+
+The camera map is host-only, like the fixture: `C:\rad-hil\cameras.json` names
+the ffmpeg binary (`C:\rad-hil\tools\ffmpeg-7.1`), each Brio 100 by serial and
+DirectShow path, and per-product views as a normalized `[x, y, width, height]`
+crop plus a clockwise rotation. The Brios look down on the bench, so screens need
+rotation:
+
+| Camera | Serial | Views |
+| --- | --- | --- |
+| 1 | 2548APP4WY98 | DTT V1 (right, 180°) and V2 (left, 180°) |
+| 2 | 2606APJMNM48 | OSSM motor and rail, before/after stills |
+| 3 | 2613APHG9948 | Lockbox R2 (left, 180°) and R8 (right, 180°) |
+| 4 | 2613APNG9C58 | RADR (left, 90°) and OSSM screen (right, 270°) |
+
+The USB topology supports one streaming camera at a time, so a product's
+devices share one camera. The recorder uses the bench camera service on
+127.0.0.1:8765 when it is running and reads DirectShow directly otherwise. An
+open Windows Camera app blocks every camera; close it before rig runs.
+
+### OSSM RS-485 interlock
+
+No OSSM image is written unless the independent RS-485 guard
+(`C:\rad-hil\rs485-guard`) protects the 57AIM30 motor: its `status.json` must
+be under 5 s old, stream bench telemetry at 30 Hz or more, hold a verified stop
+path, report no fault, and be in `collision-only` mode with a verified handback,
+which lets the firmware home within the guard's hard-stop contact limits. The
+harness watches the guard throughout the run and fails it on any guard fault,
+latch or stale status. It never clears a latch or hands the motor back; a latched
+guard waits for human review. The guard's before/after state is
+`results/rs485-guard.json`, and the comment shows motor stills from camera 2.
+
 ## Installation and runner migration
 
 1. Review and commit the `hardware-run.yml` wrapper first. Callers and the runner
@@ -130,15 +176,16 @@ freshness; do not commit generated reports.
    the legacy Lockbox `C:\lkbx-hil\fixture.lock`. Within a job both required
    variants flash and observe in parallel. A killed flash is a failure and needs
    explicit recovery; it never becomes a passing run on retry.
-6. Run real PRs against both persistent branches, including a docs-only PR, for
-   each product. Check complete device coverage, runtime merge SHA/image digest,
+6. Run real PRs against both persistent branches for each product, plus a
+   docs-only PR, which must skip the build and the rig yet pass both checks. Check complete device coverage, runtime merge SHA/image digest,
    180-second observation, network continuity, and the Lockbox migration regression.
    Fork builds remain on hosted runners; move reviewed changes to an internal
    branch before hardware validation can pass.
-7. Only after those runs pass, activate an additive branch ruleset requiring
-   `Build validation` and `Hardware validation`, integration ID 15368 (GitHub
-   Actions), with strict up-to-date branches, for main and staging. Preserve all
-   existing review/check/release rules. Never bypass failed or skipped devices.
+7. Only after those runs pass, activate the branch ruleset requiring
+   `PR target policy`, `Build validation` and `Hardware validation`, integration
+   ID 15368 (GitHub Actions), for main and staging. Do not require up-to-date
+   branches: every firmware merge adds a version-bump commit, which would force
+   another rig run on every open PR. Never bypass failed or skipped devices.
 
 ## Recovering an unavailable reviewed workflow
 
