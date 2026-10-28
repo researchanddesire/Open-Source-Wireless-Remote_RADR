@@ -215,7 +215,7 @@ a resolved workflow or a successful build alone does not clear Hardware validati
 
 ## Verification
 
-Run `python -m unittest discover -s scripts/hil -p 'test_*.py'` from the checkout.
+Run `python -m unittest discover -s software/scripts/hil -p 'test_*.py'` from the checkout.
 Tests exercise corrupted/stale bundles, wrong repository/chip/flash, overflowing
 regions, missing variants/fixtures, cross-process locks, malformed serial records,
 boot loops, stalled tasks, heartbeat gaps and network loss. These synthetic tests

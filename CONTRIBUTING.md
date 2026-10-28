@@ -10,7 +10,12 @@ User guides: [`simple-docs`](https://github.com/researchanddesire/simple-docs) `
 
 ## Build
 
+Software lives in `software/`: the PlatformIO project in `software/firmware/`,
+tooling in `software/scripts/`, and local development services in
+`software/dev/`.
+
 ```bash
+cd software/firmware
 pio run -e development
 ```
 

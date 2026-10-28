@@ -1,5 +1,5 @@
 ---
-globs: src/**/*.cpp,src/**/*.h
+globs: software/firmware/src/**/*.cpp,software/firmware/src/**/*.h
 description: Canvas-first TFT rendering to prevent flicker and improve performance
 ---
 
@@ -7,7 +7,7 @@ description: Canvas-first TFT rendering to prevent flicker and improve performan
 
 Always render to an off-screen canvas first, then push the canvas to the TFT. This minimizes flicker and significantly improves performance.
 
-Applies to any code that draws to the screen (`tft`) such as components and pages. See existing examples in [`TextButton.h`](mdc:src/components/TextButton.h) and display service headers in [`display.h`](mdc:src/services/display.h).
+Applies to any code that draws to the screen (`tft`) such as components and pages. See existing examples in [`TextButton.h`](mdc:software/firmware/src/components/TextButton.h) and display service headers in [`display.h`](mdc:software/firmware/src/services/display.h).
 
 ## Rule
 
@@ -64,9 +64,9 @@ canvas = nullptr;
 
 ## References
 
-- Button example with canvas centering: [`TextButton.h`](mdc:src/components/TextButton.h)
-- Display service and mutex: [`display.h`](mdc:src/services/display.h)
-- Colors and sizes: [`Colors.h`](mdc:src/constants/Colors.h), [`Sizes.h`](mdc:src/constants/Sizes.h)
+- Button example with canvas centering: [`TextButton.h`](mdc:software/firmware/src/components/TextButton.h)
+- Display service and mutex: [`display.h`](mdc:software/firmware/src/services/display.h)
+- Colors and sizes: [`Colors.h`](mdc:software/firmware/src/constants/Colors.h), [`Sizes.h`](mdc:software/firmware/src/constants/Sizes.h)
 
 ## Rationale
 

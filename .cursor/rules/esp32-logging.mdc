@@ -21,7 +21,7 @@ Use the appropriate ESP32 logging macros based on message importance:
 
 ### Tag Definition
 
--   Define all log tags in [LogTags.h](mdc:src/constants/LogTags.h)
+-   Define all log tags in [LogTags.h](mdc:software/firmware/src/constants/LogTags.h)
 -   Use `static const char* TAG_NAME = "ModuleName";` format
 -   Keep tag names short but descriptive (4-8 characters)
 -   Use UPPERCASE for tag names
@@ -112,7 +112,7 @@ if (retryCount > MAX_RETRIES) {
 
 ## Build Configuration
 
-Log levels are controlled by `CORE_DEBUG_LEVEL` in [platformio.ini](mdc:platformio.ini):
+Log levels are controlled by `CORE_DEBUG_LEVEL` in [platformio.ini](mdc:software/firmware/platformio.ini):
 
 -   **Development**: `CORE_DEBUG_LEVEL=4` (all levels)
 -   **Staging**: `CORE_DEBUG_LEVEL=1` (errors and warnings only)
@@ -184,6 +184,6 @@ ESP_LOGD("my_module", "Message");  // Use defined tags
 ## References
 
 -   [ESP32 Logging Documentation](https://docs.espressif.com/projects/esp-idf/en/stable/esp32/api-reference/system/log.html)
--   Current implementation: [StateLogger.h](mdc:src/utils/StateLogger.h)
--   Tag definitions: [LogTags.h](mdc:src/constants/LogTags.h)
--   Build configuration: [platformio.ini](mdc:platformio.ini)
+-   Current implementation: [StateLogger.h](mdc:software/firmware/src/utils/StateLogger.h)
+-   Tag definitions: [LogTags.h](mdc:software/firmware/src/constants/LogTags.h)
+-   Build configuration: [platformio.ini](mdc:software/firmware/platformio.ini)

@@ -19,22 +19,22 @@ When using constant value strings in ESP32/Arduino projects, prefer storing them
 
 - Store all language strings in PROGMEM using individual `const char name[] PROGMEM = "text";` declarations
 - Use `const char*` pointers in structs instead of `String` objects
-- Centralize general UI strings in [Strings.h](mdc:src/constants/Strings.h)
-- Reference: [LanguageStruct.h](mdc:src/structs/LanguageStruct.h), [en-us.h](mdc:src/constants/copy/en-us.h)
+- Centralize general UI strings in [Strings.h](mdc:software/firmware/src/constants/Strings.h)
+- Reference: [LanguageStruct.h](mdc:software/firmware/src/structs/LanguageStruct.h), [en-us.h](mdc:software/firmware/src/constants/copy/en-us.h)
 
 ### 2. Hardcoded Display Strings
 
 - **DO NOT use F() style functions unless SPECIFICALLY requested**
 - Store persistent strings as `const char name[] PROGMEM = "text";`
 - Use `const char*` pointers for string references
-- Prefer declaring display text in [Strings.h](mdc:src/constants/Strings.h) and include it where needed
-- Examples: [OSSM.cpp](mdc:src/ossm/OSSM.cpp), [OSSM.Update.cpp](mdc:src/ossm/OSSM.Update.cpp)
+- Prefer declaring display text in [Strings.h](mdc:software/firmware/src/constants/Strings.h) and include it where needed
+- Examples: [OSSM.cpp](mdc:software/firmware/src/ossm/OSSM.cpp), [OSSM.Update.cpp](mdc:software/firmware/src/ossm/OSSM.Update.cpp)
 
 ### 3. Command and Configuration Strings
 
 - Store command prefixes and configuration strings in PROGMEM
 - Use `FPSTR()` macro when converting PROGMEM strings for String operations
-- Reference: [commands.hpp](mdc:src/command/commands.hpp)
+- Reference: [commands.hpp](mdc:software/firmware/src/command/commands.hpp)
 
 ### 4. String Parameter Passing
 
@@ -114,9 +114,9 @@ String constantString = "Never changes";  // Should be PROGMEM
 
 ## File References
 
-- Centralized UI strings: [Strings.h](mdc:src/constants/Strings.h)
-- Language system: [LanguageStruct.h](mdc:src/structs/LanguageStruct.h)
-- English strings: [en-us.h](mdc:src/constants/copy/en-us.h)
-- French strings: [fr.h](mdc:src/constants/copy/fr.h)
-- Menu system: [Menu.h](mdc:src/constants/Menu.h)
-- Command system: [commands.hpp](mdc:src/command/commands.hpp)
+- Centralized UI strings: [Strings.h](mdc:software/firmware/src/constants/Strings.h)
+- Language system: [LanguageStruct.h](mdc:software/firmware/src/structs/LanguageStruct.h)
+- English strings: [en-us.h](mdc:software/firmware/src/constants/copy/en-us.h)
+- French strings: [fr.h](mdc:software/firmware/src/constants/copy/fr.h)
+- Menu system: [Menu.h](mdc:software/firmware/src/constants/Menu.h)
+- Command system: [commands.hpp](mdc:software/firmware/src/command/commands.hpp)

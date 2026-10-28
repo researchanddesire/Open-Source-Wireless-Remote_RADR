@@ -1,12 +1,12 @@
 ---
-globs: src/services/**/*.h,src/services/**/*.cpp
-description: Services must follow the singleton pattern documented in src/services/readme.md
+globs: software/firmware/src/services/**/*.h,software/firmware/src/services/**/*.cpp
+description: Services must follow the singleton pattern documented in software/firmware/src/services/readme.md
 ---
 
 # Services Pattern (Singleton, shared, non-thread-safe by default)
 
-All files under `src/services/` should follow the pattern defined in
-[readme.md](mdc:src/services/readme.md).
+All files under `software/firmware/src/services/` should follow the pattern defined in
+[readme.md](mdc:software/firmware/src/services/readme.md).
 
 ## Requirements
 

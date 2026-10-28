@@ -4,9 +4,13 @@ Guidance for agents working in this product repository.
 
 ## Repository Layout
 
-- The PlatformIO firmware project lives at the repository root: `platformio.ini`,
-  `src/`, `include/`, `lib/`, `data/`, `test/`, and `config/` (boards and
-  `partition.csv`). Run `pio` commands from the root.
+- All software lives in `software/`. `software/firmware/` is the PlatformIO
+  project: `platformio.ini`, `src/`, `include/`, `lib/`, `data/`, `test/`,
+  `config/` (boards and `partition.csv`) and `ButtplugIO/` (protocol sources
+  that `../scripts/convert.sh` turns into `data/`). Run `pio` commands there.
+- `software/scripts/` holds image and protocol conversion, release, screen
+  capture and rig (`hil/`) tooling; `software/dev/` is for local development
+  services.
 - `hardware/` holds `Print Files/`, `Photos/`, `pcb/`, `cad/`, `cables/`, and `bom.csv`.
 - `developer-docs/` is the MkDocs developer site; `assembly-docs/` is the hub
   mirror described below.
@@ -23,7 +27,7 @@ Guidance for agents working in this product repository.
 ## Branch and Release Policy
 
 - Persistent branches are lowercase `staging` and `main`. Fetch before branching.
-- The firmware directory is the firmware project at the repository root (`src/`, `include/`, `lib/`, `data/`, `config/`, `test/`, `ButtplugIO/`, `platformio.ini` and the build scripts). `FIRMWARE_PATHS` in `pr-firmware.yml` and `pr-target-policy.yml` and the `publish_firmware.yml` push paths define it; keep them in sync.
+- The firmware directory is the PlatformIO project in `software/firmware/` plus the conversion scripts `software/scripts/*.sh`. `FIRMWARE_PATHS` in `pr-firmware.yml` and `pr-target-policy.yml` and the `publish_firmware.yml` push paths define it; keep them in sync.
 - Firmware changes enter `staging` first: branch from `origin/staging` and open the PR into `staging`. Promote with a same-repository `staging` → `main` PR.
 - A production fix may take firmware to `main` directly from a `fix/<issue>` branch (an owner prefix such as `AJ/fix/<issue>` also works) started from `origin/main`.
 - Changes outside the firmware directory (documentation, hardware, BOMs, workflows) may open their PR straight into `main`; they need no build or hardware checks. `PR target policy` enforces these rules.
@@ -53,14 +57,14 @@ Guidance for agents working in this product repository.
 
 ## PR hardware validation
 
-- PRs into `staging` or `main` that change the firmware directory, or the validation tooling (`scripts/hil/`, `pr-firmware.yml`, `hardware-run.yml`, `.github/scripts/hil_evidence.py`), build every hardware variant and run the exact staging bundle for the PR merge SHA on the shared Test Rig. Other PRs skip both; `Build validation` and `Hardware validation` then pass without work.
+- PRs into `staging` or `main` that change the firmware directory, or the validation tooling (`software/scripts/hil/`, `pr-firmware.yml`, `hardware-run.yml`, `.github/scripts/hil_evidence.py`), build every hardware variant and run the exact staging bundle for the PR merge SHA on the shared Test Rig. Other PRs skip both; `Build validation` and `Hardware validation` then pass without work.
 - `PR target policy`, `Build validation` and `Hardware validation` are required on `staging` and `main`.
 - The rig records the product's camera for the whole run; `Hardware evidence` comments on the PR with each device's video and result, pass or fail. Video never decides a result.
 - Merging a firmware change into `main` allocates the next version and publishes a signed candidate through `publish_firmware.yml`; staging merges do not.
 - Firmware bundles and hardware evidence are Actions artifacts, never tracked files.
 - The reviewed harness and fixture inventory live outside the runner work directory.
 - Never infer product identity or flash capacity from a COM port or advertising name.
-- Follow scripts/hil/README.md for enrollment, shared-device locks, and rollout.
+- Follow software/scripts/hil/README.md for enrollment, shared-device locks, and rollout.
 - Keep Wi-Fi credentials, fixture identities, and raw device logs outside the repository.
 - A missing device or incomplete three-minute observation must fail validation.
 

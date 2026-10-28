@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 import unittest
 
-PROJECT = Path(__file__).resolve().parents[1]
+PROJECT = Path(__file__).resolve().parents[1] / 'firmware'
 spec = importlib.util.spec_from_file_location('identity_build', PROJECT/'serial_identity_build.py')
 build = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(build)

@@ -12,7 +12,7 @@ permissions:
 env:
   # The firmware directory. Keep in sync with pr-firmware.yml and the
   # publish_firmware.yml push paths.
-  FIRMWARE_PATHS: '^(src|include|lib|data|config|test|ButtplugIO)/|^(platformio\.ini|firmware_build_metadata\.py|serial_identity_build\.py|scripts/[^/]*\.sh)$'
+  FIRMWARE_PATHS: '^software/firmware/|^software/scripts/[^/]*\.sh$'
   FIRMWARE_IGNORE: ''
 
 jobs:

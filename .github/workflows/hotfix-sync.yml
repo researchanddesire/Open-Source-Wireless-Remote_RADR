@@ -43,7 +43,7 @@ jobs:
           GH_TOKEN: ${{ steps.version_token.outputs.token }}
           # main wins documentation and the firmware version, which only main allocates.
           DOCS_PATHS: '^(assembly-docs|docs|developer-docs)/'
-          VERSION_FILES: '^(src/constants/Version\.h|version\.json)$'
+          VERSION_FILES: '^(software/firmware/src/constants/Version\.h|version\.json)$'
         shell: bash
         run: |
           git config user.name "rad-version-control[bot]"

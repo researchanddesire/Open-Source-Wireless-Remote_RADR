@@ -11,17 +11,8 @@ on:
       # publishes a signed candidate. Keep in sync with FIRMWARE_PATHS in
       # pr-firmware.yml and pr-target-policy.yml. Release tooling changes are
       # exercised by PR checks and republished manually.
-      - "src/**"
-      - "include/**"
-      - "lib/**"
-      - "data/**"
-      - "config/**"
-      - "test/**"
-      - "ButtplugIO/**"
-      - "platformio.ini"
-      - "firmware_build_metadata.py"
-      - "serial_identity_build.py"
-      - "scripts/*.sh"
+      - "software/firmware/**"
+      - "software/scripts/*.sh"
 
 permissions:
   contents: write
@@ -46,7 +37,7 @@ jobs:
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
-          if python scripts/release_version.py is-auto-commit --message "$COMMIT_MESSAGE" --track "$GITHUB_REF_NAME"; then
+          if python software/scripts/release_version.py is-auto-commit --message "$COMMIT_MESSAGE" --track "$GITHUB_REF_NAME"; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
@@ -58,6 +49,9 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: ${{ github.ref_name == 'main' && 'firmware-production' || 'firmware-staging' }}
+    defaults:
+      run:
+        working-directory: software/firmware
     env:
       FIRMWARE_PUBLISH_TOKEN: ${{ secrets.FIRMWARE_PUBLISH_TOKEN }}
       FIRMWARE_PROVENANCE_SIGNING_KEY_PEM: ${{ secrets.FIRMWARE_PROVENANCE_SIGNING_KEY_PEM }}
@@ -101,30 +95,31 @@ jobs:
 
       - name: Allocate and commit next version
         id: version
+        working-directory: .
         env:
           PR_TITLE: ${{ steps.pull_request.outputs.title }}
           DEVICE_TYPE: radr
-          VERSION_HEADER: src/constants/Version.h
-          RELEASE_VERSION: scripts/release_version.py
+          VERSION_HEADER: software/firmware/src/constants/Version.h
+          RELEASE_VERSION: software/scripts/release_version.py
         run: bash .github/scripts/allocate_version.sh
       - name: Install PlatformIO
         run: python -m pip install platformio==6.1.19
 
       - name: Test publisher
         run: |
-          python .github/scripts/test_build_web_installer.py
-          python .github/scripts/test_firmware_provenance.py
-          python .github/scripts/test_publish_immutable_firmware.py
-          python .github/scripts/test_release_workflow.py
+          python ../../.github/scripts/test_build_web_installer.py
+          python ../../.github/scripts/test_firmware_provenance.py
+          python ../../.github/scripts/test_publish_immutable_firmware.py
+          python ../../.github/scripts/test_release_workflow.py
 
       - name: Run release helper tests
-        run: python scripts/test_release_version.py
+        run: python ../scripts/test_release_version.py
 
       - name: Run native unit tests
         run: pio test -e test_native
 
       - name: Select track build
-        run: python .github/scripts/release_workflow.py configure --branch "$GITHUB_REF_NAME"
+        run: python ../../.github/scripts/release_workflow.py configure --branch "$GITHUB_REF_NAME"
 
       - name: Build application and filesystem
         run: |
@@ -136,7 +131,7 @@ jobs:
 
       - name: Build merged web installer
         run: |
-          python .github/scripts/build_web_installer.py \
+          python ../../.github/scripts/build_web_installer.py \
             --profile esp32s3-16mb \
             --build-dir ".pio/build/$PIO_ENV" \
             --filesystem ".pio/build/$PIO_ENV/littlefs.bin" \
@@ -147,7 +142,7 @@ jobs:
       - name: Publish validating release
         id: publish
         run: |
-          python .github/scripts/publish_immutable_firmware.py \
+          python ../../.github/scripts/publish_immutable_firmware.py \
             --device-type radr \
             --track "$TRACK" \
             --build-sha "$RELEASE_BUILD_SHA" \
