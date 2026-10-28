@@ -81,18 +81,19 @@ cd Open-Source-Wireless-Remote_RADR
 
 ### Step 2: Open in VS Code
 
-Open the repository folder in VS Code. PlatformIO will automatically detect the project configuration.
+Open the `software/firmware/` folder, the PlatformIO project, in VS Code. PlatformIO detects the project from its `platformio.ini`.
 
 ### Step 3: Build the firmware
 
 Click the PlatformIO Build button or run:
 ```bash
+cd software/firmware
 pio run
 ```
 
 ### Step 4: Flash to device
 
-Connect RADR via USB-C and click Upload, or run:
+Connect RADR via USB-C and click Upload, or run from `software/firmware/`:
 ```bash
 pio run --target upload
 ```
@@ -127,6 +128,8 @@ RADR supports multiple device types through a two-tier registry:
 The dynamic registry (`registry.json`) can be updated via firmware updates to add new device support without code changes.
 
 ## Configuration Files
+
+Paths are relative to `software/firmware/`.
 
 | File | Purpose |
 |------|---------|

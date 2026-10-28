@@ -4,6 +4,8 @@ description: "How RADR discovers and creates device instances from BLE service U
 sidebarTitle: "Device Registry"
 ---
 
+Source and data paths on this page are relative to the PlatformIO project in `software/firmware/`.
+
 The device registry is the core system that maps Bluetooth Low Energy (BLE) service UUIDs to device factories. When RADR scans for devices, it uses service UUIDs to determine which factory should create the device instance.
 
 ## Architecture Overview
@@ -224,7 +226,7 @@ Compile and flash the updated firmware.
 When developing locally, use PlatformIO's "Upload Filesystem" feature to flash the `data/` directory to LittleFS:
 
 1. Modify `data/registry.json` or add spec files to `data/protocols/`
-2. In VS Code with PlatformIO, click **Upload Filesystem** (or run `pio run --target uploadfs`)
+2. In VS Code with PlatformIO, click **Upload Filesystem** (or run `pio run --target uploadfs` from `software/firmware/`)
 3. The device will use the updated registry on next boot
 
 !!! warning

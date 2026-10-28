@@ -5,10 +5,10 @@ read-only `screen` command on the normal 115200-baud USB serial port. Production
 and staging profiles omit the console, its task and its capture memory.
 Existing development aliases retain their behavior.
 
-Build explicitly without uploading:
+Build explicitly without uploading, from the repository root:
 
 ```sh
-pio run -e development -t buildprog
+pio run -d software/firmware -e development -t buildprog
 ```
 
 Use the enrolled device and its matching flash/PSRAM profile. Do not replace its
@@ -18,7 +18,7 @@ the device idle (and a Lockbox unlocked).
 
 ```sh
 python -m pip install pyserial
-python scripts/capture_screen.py --port COM_PORT --product RADR --output-dir captures --name current
+python software/scripts/capture_screen.py --port COM_PORT --product RADR --output-dir captures --name current
 ```
 
 Replace COM_PORT with the verified device port. Opening serial can reset some

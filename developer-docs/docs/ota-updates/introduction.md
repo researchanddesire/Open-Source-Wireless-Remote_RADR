@@ -4,6 +4,8 @@ description: "Technical documentation for the RADR over-the-air update architect
 sidebarTitle: "OTA Updates"
 ---
 
+Source and data paths on this page are relative to the PlatformIO project in `software/firmware/`.
+
 This document describes the over-the-air (OTA) update system used by the Research And Desire wireless Remote (RADR), including the update chain, state machine flow, and what components get updated.
 
 ## Overview
@@ -208,7 +210,7 @@ This sets both `isSoftwareUpdateAvailable` and `isFilesystemUpdateAvailable` to 
 
 ### Local Filesystem Updates
 
-When developing locally, use PlatformIO's "Upload Filesystem" feature:
+When developing locally, use PlatformIO's "Upload Filesystem" feature from `software/firmware/`:
 
 ```bash
 pio run --target uploadfs
