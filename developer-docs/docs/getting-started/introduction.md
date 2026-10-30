@@ -88,7 +88,7 @@ Open the `software/firmware/` folder, the PlatformIO project, in VS Code. Platfo
 Click the PlatformIO Build button or run:
 ```bash
 cd software/firmware
-pio run
+pio run -t buildprog
 ```
 
 ### Step 4: Flash to device
@@ -134,7 +134,8 @@ Paths are relative to `software/firmware/`.
 | File | Purpose |
 |------|---------|
 | `platformio.ini` | Build configuration and dependencies |
-| `src/config.h` | Hardware pin definitions and constants |
+| `src/pins.h` | Hardware pin definitions |
+| `src/constants.h` | Firmware constants |
 | `data/registry.json` | Buttplug.io device UUID mappings |
 
 ## Technical Reference
