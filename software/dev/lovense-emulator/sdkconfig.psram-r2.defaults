@@ -1,0 +1,6 @@
+# ESP32-S3R2 package overlay — 2 MB embedded Quad PSRAM.
+#
+# Quad versus Octal is a compile-time choice in ESP-IDF 4.4.7. The AUTO type
+# setting discovers density only after the correct electrical interface starts.
+CONFIG_SPIRAM_MODE_QUAD=y
+# CONFIG_SPIRAM_MODE_OCT is not set

@@ -9,9 +9,18 @@
 #include <LittleFS.h>
 #include <regex>
 
+/// @brief Allocator for the large Buttplug registry and protocol documents.
+///
+/// ArduinoJson builds a document from many small allocations, which the
+/// default allocator takes from internal RAM. A parsed protocol file needs
+/// tens of kilobytes, more than RADR has left once Wi-Fi and BLE are running,
+/// so these documents live in PSRAM (falling back to internal RAM without it).
+ArduinoJson::Allocator* buttplugJsonAllocator();
+
 /// @brief Reads and parses a JSON file from LittleFS
 /// @param filename The filename to read
-/// @param doc The JsonDocument to populate
+/// @param doc The JsonDocument to populate. Create it with
+///            buttplugJsonAllocator() for registry and protocol files.
 /// @return true if successful, false otherwise
 bool readJsonFile(const String& filename, JsonDocument& doc);
 

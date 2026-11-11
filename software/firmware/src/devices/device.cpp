@@ -266,9 +266,12 @@ void Device::connectionTask(void *pvParameter) {
 }
 
 void Device::startConnectionTask() {
-    if (createInternalTask(Device::connectionTask, "connectionTask",
-                           10 * configMINIMAL_STACK_SIZE, this, 1,
-                           &connectionTaskHandle, 0) != pdPASS) {
+    // The stack stays in internal RAM: device code reads LittleFS on this
+    // task (the Buttplug protocol file), which a PSRAM stack cannot do.
+    if (createInternalTaskWithWait(Device::connectionTask, "connectionTask",
+                                   10 * configMINIMAL_STACK_SIZE, this, 1,
+                                   &connectionTaskHandle, 0,
+                                   4000) != pdPASS) {
         updateStatusText("Out of memory: cannot connect.");
         if (stateMachine) {
             stateMachine->process_event(connected_error_event());

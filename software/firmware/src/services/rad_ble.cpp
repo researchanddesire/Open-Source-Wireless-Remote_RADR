@@ -584,14 +584,13 @@ radble::Result handleCommand(JsonObjectConst request, void*) {
                 document["rssi"] = device->advertisedDevice->getRSSI();
             }
         } else if (path == "setting.deviceRegistry") {
-            document["count"] = registry.size();
+            const size_t registrySize = getDeviceRegistrySize();
+            document["count"] = registrySize;
             JsonArray entries = document["entries"].to<JsonArray>();
-            size_t count = 0;
-            for (const auto& entry : registry) {
-                if (count++ == 4) break;
-                entries.add(entry.first.c_str());
+            for (size_t index = 0; index < registrySize && index < 4; index++) {
+                entries.add(getDeviceRegistryUuid(index));
             }
-            document["truncated"] = registry.size() > 4;
+            document["truncated"] = registrySize > 4;
         } else if (path.startsWith("peripheral.ossm.")) {
             if (device == nullptr || !device->isConnected)
                 return radble::Result::failure("invalid_state",

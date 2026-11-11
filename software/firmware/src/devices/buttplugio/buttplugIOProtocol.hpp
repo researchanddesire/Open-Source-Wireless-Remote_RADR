@@ -26,8 +26,8 @@ class ButtplugIoProtocol {
     virtual String getIdentifier() = 0;
 
     void setProtocol(const String& identifierString) {
-        // read the config file
-        JsonDocument doc;
+        // read the config file (large: keep it out of internal RAM)
+        JsonDocument doc(buttplugJsonAllocator());
         if (!readJsonFile(configFileName, doc)) {
             ESP_LOGE("BUTTPLUGIO_PROTOCOL", "Failed to read config file: %s",
                      configFileName.c_str());

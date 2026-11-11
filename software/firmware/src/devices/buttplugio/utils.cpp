@@ -4,6 +4,31 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include <esp_heap_caps.h>
+
+namespace {
+struct PsramAllocator : ArduinoJson::Allocator {
+    void* allocate(size_t size) override {
+        return heap_caps_malloc_prefer(size, 2,
+                                       MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT,
+                                       MALLOC_CAP_DEFAULT);
+    }
+
+    void deallocate(void* pointer) override { heap_caps_free(pointer); }
+
+    void* reallocate(void* pointer, size_t size) override {
+        return heap_caps_realloc_prefer(pointer, size, 2,
+                                        MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT,
+                                        MALLOC_CAP_DEFAULT);
+    }
+};
+}  // namespace
+
+ArduinoJson::Allocator* buttplugJsonAllocator() {
+    static PsramAllocator allocator;
+    return &allocator;
+}
+
 /// @brief Reads and parses a JSON file from LittleFS
 /// @param filename The filename to read
 /// @param doc The JsonDocument to populate
@@ -15,11 +40,9 @@ bool readJsonFile(const String& filename, JsonDocument& doc) {
         return false;
     }
 
-    String jsonString = file.readString();
-    vTaskDelay(1);
+    // Parse straight from the file: no second copy of the text in RAM.
+    DeserializationError error = deserializeJson(doc, file);
     file.close();
-
-    DeserializationError error = deserializeJson(doc, jsonString);
     vTaskDelay(1);
     if (error) {
         ESP_LOGE("BUTTPLUGIO", "Failed to parse file %s: %s", filename.c_str(),
