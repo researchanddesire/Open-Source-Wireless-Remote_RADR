@@ -2,8 +2,6 @@
 #define REGISTRY_H
 
 #include <NimBLEUUID.h>
-#include <string>
-#include <unordered_map>
 
 #include "device.h"
 
@@ -11,13 +9,15 @@
 typedef Device *(*DeviceFactory)(
     const NimBLEAdvertisedDevice *advertisedDevice);
 
-// Global registry map - must call initRegistry() before use
-extern std::unordered_map<std::string, DeviceFactory> registry;
-
 // Initialize the device registry (loads from LittleFS)
 void initRegistry();
 
 // Look up a device factory by service UUID
 const DeviceFactory *getDeviceFactory(const NimBLEUUID &serviceUUID);
+
+// Number of registered services, and the upper-case UUID of one of them
+// (nullptr when the index is out of range).
+size_t getDeviceRegistrySize();
+const char *getDeviceRegistryUuid(size_t index);
 
 #endif
