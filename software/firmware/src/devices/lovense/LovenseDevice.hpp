@@ -51,6 +51,16 @@ class LovenseDevice : public Device, public ButtplugIoProtocol {
                  }}}};
     }
 
+    ~LovenseDevice() override {
+        // RADR is about to drop the link (the user left the device or
+        // disconnected it). Nothing guarantees that the toy stops by itself,
+        // so stop it first and give the write time to leave the radio.
+        if (isConnected && pClient != nullptr && pClient->isConnected()) {
+            setVibrate(0);
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+        }
+    }
+
     String rxValue = "";
     float vibrateIntensity = 0;
     int leftFocusedIndex = 0;
@@ -58,9 +68,13 @@ class LovenseDevice : public Device, public ButtplugIoProtocol {
     String getIdentifier() override {
         rxValue = "";
         // This is required to parse the config file.
-        // Resend "DeviceType;" every 250ms until rxValue is set
+        // Resend "DeviceType;" every 250ms until the toy answers. Give up
+        // after a few seconds so a toy that never answers cannot block the
+        // connection forever; it is then driven as a plain vibrator.
         const TickType_t checkInterval = 250 / portTICK_PERIOD_MS;
-        TickType_t lastSendTick = xTaskGetTickCount();
+        const TickType_t timeout = 5000 / portTICK_PERIOD_MS;
+        const TickType_t startTick = xTaskGetTickCount();
+        TickType_t lastSendTick = startTick;
 
         do {
             vTaskDelay(
@@ -69,6 +83,10 @@ class LovenseDevice : public Device, public ButtplugIoProtocol {
 
             // Every 250ms, resend the command if rxValue not set
             TickType_t currentTick = xTaskGetTickCount();
+            if ((currentTick - startTick) >= timeout) {
+                ESP_LOGW("LOVENSE", "No DeviceType reply; using defaults");
+                return "";
+            }
             if ((currentTick - lastSendTick) >= checkInterval) {
                 send("tx", "DeviceType;");
                 lastSendTick = currentTick;

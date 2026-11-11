@@ -73,6 +73,45 @@ inline BaseType_t createInternalTask(TaskFunction_t task, const char *name,
     return result;
 }
 
+// createInternalTask() for a task that must not fail because internal RAM is
+// briefly busy. Internal RAM is nearly full once Wi-Fi and BLE run, and other
+// short-lived users (a scan monitor stack, a TLS handshake) can hold the only
+// free block large enough for this stack for a second or two. Waits up to
+// waitMs for a large enough block before creating the task; blocks the caller
+// meanwhile.
+inline BaseType_t createInternalTaskWithWait(TaskFunction_t task,
+                                             const char *name,
+                                             uint32_t stackBytes, void *param,
+                                             UBaseType_t priority,
+                                             TaskHandle_t *handle,
+                                             BaseType_t core,
+                                             uint32_t waitMs) {
+    // The stack is one block; allow for the heap's own block header.
+    const size_t needed = stackBytes + 64;
+    const TickType_t start = xTaskGetTickCount();
+    bool waited = false;
+    while (heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL |
+                                            MALLOC_CAP_8BIT) < needed &&
+           (xTaskGetTickCount() - start) < pdMS_TO_TICKS(waitMs)) {
+        if (!waited) {
+            ESP_LOGW("TASK",
+                     "Waiting for internal RAM to create task %s (%u byte "
+                     "stack): largest=%u",
+                     name, (unsigned)stackBytes,
+                     (unsigned)heap_caps_get_largest_free_block(
+                         MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT));
+            waited = true;
+        }
+        vTaskDelay(pdMS_TO_TICKS(50));
+    }
+    if (waited) {
+        ESP_LOGW("TASK", "Waited %u ms for internal RAM for task %s",
+                 (unsigned)pdTICKS_TO_MS(xTaskGetTickCount() - start), name);
+    }
+    return createInternalTask(task, name, stackBytes, param, priority, handle,
+                              core);
+}
+
 // True when the task's stack was allocated by xTaskCreate*WithCaps (which
 // creates a statically-allocated task around caller-provided buffers).
 inline bool isPsramTask(TaskHandle_t handle) {

@@ -36,21 +36,20 @@ static const char NEW_DEVICE_SERVICE_ID[] PROGMEM = "xxxxxxxx-xxxx-xxxx-xxxx-xxx
 
 3. **Register a factory in `registry.cpp`**
 
-- Include your device header and add an entry in the `initRegistry()` function mapping the service UUID to a factory that returns a `Device*` of your concrete class.
+- Include your device header and add an entry to `kExplicitServices` mapping the service UUID to a factory that returns a `Device*` of your concrete class.
 
 ```cpp
 // src/devices/registry.cpp
 #include "your_vendor/your_device/your_device.h"
 
-void initRegistry() {
-    registry.clear();
-    
-    registry.emplace(OSSM_SERVICE_ID, [](const NimBLEAdvertisedDevice *ad) -> Device* { return new OSSM(ad); });
-    registry.emplace(DOMI_SERVICE_ID, [](const NimBLEAdvertisedDevice *ad) -> Device* { return new Domi2(ad); });
-    registry.emplace(NEW_DEVICE_SERVICE_ID, [](const NimBLEAdvertisedDevice *ad) -> Device* { return new YourDeviceClass(ad); });
-    
-    // ... rest of LittleFS loading ...
+Device *createYourDevice(const NimBLEAdvertisedDevice *ad) {
+    return new YourDeviceClass(ad);
 }
+
+const ExplicitService kExplicitServices[] = {
+    {OSSM_SERVICE_ID, createOssm},
+    {NEW_DEVICE_SERVICE_ID, createYourDevice},
+};
 ```
 
 **Note:** Call `initRegistry()` once during startup (e.g., in `setup()`) before using the registry.
